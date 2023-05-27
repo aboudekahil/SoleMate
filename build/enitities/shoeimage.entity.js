@@ -52,6 +52,6 @@ __decorate([
     __metadata("design:type", shoe_entity_1.Shoe)
 ], ShoeImage.prototype, "shoe", void 0);
 ShoeImage = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "shoe_images" })
 ], ShoeImage);
 exports.ShoeImage = ShoeImage;

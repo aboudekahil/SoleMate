@@ -11,7 +11,7 @@ import { User } from "./user.entity";
 import { Review } from "./review.entity";
 import { ShoeImage } from "./shoeimage.entity";
 
-@Entity()
+@Entity({ name: "shoes" })
 export class Shoe {
   @PrimaryGeneratedColumn("uuid")
   shoe_id: string;

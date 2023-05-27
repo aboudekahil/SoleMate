@@ -64,6 +64,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Review.prototype, "website_performance_rating", void 0);
 Review = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "reviews" })
 ], Review);
 exports.Review = Review;

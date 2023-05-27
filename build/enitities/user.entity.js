@@ -106,6 +106,6 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "feedbacks", void 0);
 User = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "users" })
 ], User);
 exports.User = User;

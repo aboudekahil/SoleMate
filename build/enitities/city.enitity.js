@@ -32,6 +32,6 @@ __decorate([
     __metadata("design:type", Array)
 ], City.prototype, "users", void 0);
 City = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "cities" })
 ], City);
 exports.City = City;

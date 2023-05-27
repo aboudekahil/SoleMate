@@ -14,14 +14,14 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const class_validator_1 = require("class-validator");
 let OmtPayment = class OmtPayment {
-    omt_payment;
+    omtpayment_id;
     value;
     user;
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
     __metadata("design:type", String)
-], OmtPayment.prototype, "omt_payment", void 0);
+], OmtPayment.prototype, "omtpayment_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true, nullable: false }),
     (0, class_validator_1.Length)(1),
@@ -33,6 +33,6 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], OmtPayment.prototype, "user", void 0);
 OmtPayment = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "omt_payments" })
 ], OmtPayment);
 exports.OmtPayment = OmtPayment;

@@ -35,6 +35,6 @@ __decorate([
     __metadata("design:type", Number)
 ], ShoeSize.prototype, "price", void 0);
 ShoeSize = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "shoe_sizes" })
 ], ShoeSize);
 exports.ShoeSize = ShoeSize;

@@ -8,10 +8,10 @@ import {
 import { User } from "./user.entity";
 import { Length } from "class-validator";
 
-@Entity()
+@Entity({ name: "whish_payments" })
 export class WhishPayment {
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  whishpayment_id: string;
 
   @Column({ unique: true, nullable: false })
   @Length(1)

@@ -12,7 +12,7 @@ import { Shoe } from "./shoe.entity";
 import { Review } from "./review.entity";
 import { Feedback } from "./feedback.entity";
 
-@Entity()
+@Entity({ name: "users" })
 export class User {
   @PrimaryGeneratedColumn("uuid")
   user_id: string;

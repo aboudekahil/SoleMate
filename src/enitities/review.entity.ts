@@ -3,7 +3,7 @@ import { User } from "./user.entity";
 import { Shoe } from "./shoe.entity";
 import { IsInt, Max, Min } from "class-validator";
 
-@Entity()
+@Entity({ name: "reviews" })
 export class Review {
   @PrimaryGeneratedColumn("uuid")
   review_id: string;

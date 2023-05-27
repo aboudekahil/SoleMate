@@ -1,0 +1,6 @@
+CREATE TRIGGER IF NOT EXISTS set_review_id_trigger
+BEFORE INSERT ON reviews
+FOR EACH ROW
+BEGIN
+  SET NEW.review_id = UUID();
+END;

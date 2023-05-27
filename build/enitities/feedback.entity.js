@@ -14,14 +14,14 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const class_validator_1 = require("class-validator");
 let Feedback = class Feedback {
-    comment_id;
+    feedback_id;
     user;
-    comment_text;
+    content;
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
     __metadata("design:type", String)
-], Feedback.prototype, "comment_id", void 0);
+], Feedback.prototype, "feedback_id", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.feedbacks, { nullable: false }),
     __metadata("design:type", user_entity_1.User)
@@ -30,8 +30,8 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: false }),
     (0, class_validator_1.Length)(1, 280),
     __metadata("design:type", String)
-], Feedback.prototype, "comment_text", void 0);
+], Feedback.prototype, "content", void 0);
 Feedback = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "feedbacks" })
 ], Feedback);
 exports.Feedback = Feedback;

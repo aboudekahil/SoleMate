@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Shoe } from "./shoe.entity";
 
-@Entity()
+@Entity({ name: "shoe_sizes" })
 export class ShoeSize {
   @PrimaryGeneratedColumn("uuid")
   shoesize_id: string;

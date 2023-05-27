@@ -2,7 +2,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Shoe } from "./shoe.entity";
 import { Length } from "class-validator";
 
-@Entity()
+@Entity({ name: "shoe_images" })
 export class ShoeImage {
   @PrimaryGeneratedColumn("uuid")
   image_id: string;

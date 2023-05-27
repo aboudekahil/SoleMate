@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 import { Length } from "class-validator";
 
-@Entity()
+@Entity({ name: "cities" })
 export class City {
   @PrimaryGeneratedColumn("uuid")
   city_id: string;

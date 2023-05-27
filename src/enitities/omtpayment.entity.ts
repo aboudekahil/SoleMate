@@ -8,10 +8,10 @@ import {
 import { User } from "./user.entity";
 import { Length } from "class-validator";
 
-@Entity()
+@Entity({ name: "omt_payments" })
 export class OmtPayment {
   @PrimaryGeneratedColumn("uuid")
-  omt_payment: string;
+  omtpayment_id: string;
 
   @Column({ unique: true, nullable: false })
   @Length(1)

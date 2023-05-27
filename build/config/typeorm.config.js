@@ -18,8 +18,10 @@ exports.AppDataSource = new typeorm_1.DataSource({
     username: "root",
     password: "root",
     database: "solemate",
-    synchronize: false,
+    synchronize: true,
     logging: true,
+    // DO NOT RUN THIS IN PROD
+    dropSchema: true,
     entities: [
         city_enitity_1.City,
         feedback_entity_1.Feedback,

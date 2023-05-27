@@ -1,0 +1,6 @@
+CREATE TRIGGER IF NOT EXISTS set_shoe_id_trigger
+BEFORE INSERT ON shoes
+FOR EACH ROW
+BEGIN
+  SET NEW.shoe_id = UUID();
+END;

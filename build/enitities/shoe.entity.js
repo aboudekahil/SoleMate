@@ -69,6 +69,6 @@ __decorate([
     __metadata("design:type", Array)
 ], Shoe.prototype, "reviews", void 0);
 Shoe = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: "shoes" })
 ], Shoe);
 exports.Shoe = Shoe;

@@ -16,8 +16,10 @@ export const AppDataSource = new DataSource({
   username: "root",
   password: "root",
   database: "solemate",
-  synchronize: false,
+  synchronize: true,
   logging: true,
+  // DO NOT RUN THIS IN PROD
+  dropSchema: true,
   entities: [
     City,
     Feedback,
