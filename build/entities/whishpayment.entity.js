@@ -14,14 +14,14 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const class_validator_1 = require("class-validator");
 let WhishPayment = class WhishPayment {
-    whishpayment_id;
+    whish_payment_id;
     value;
     user;
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
     __metadata("design:type", String)
-], WhishPayment.prototype, "whishpayment_id", void 0);
+], WhishPayment.prototype, "whish_payment_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true, nullable: false }),
     (0, class_validator_1.Length)(1),

@@ -1,13 +1,25 @@
-type PaymentType = "admin" | "editor" | "ghost";
-type ShoeCondition = "New" | "Barely worn" | "Worn";
-type ShoeImageType =
-  | "Front"
-  | "Back"
-  | "Sides 1"
-  | "Sides 2"
-  | "Tag"
-  | "Insole"
-  | "Box Front"
-  | "Box Tag"
-  | "Box date"
-  | "Other";
+type UserCreateBody = {
+  name: string;
+  password: string;
+  email_address: string;
+  family_name: string;
+  payment_option: users_payment_option;
+  payment_values: {
+    OMT?: string;
+    Whish?: string;
+  };
+  phone_number: string;
+  city: string;
+  building: string;
+  apartment: string;
+  street: string;
+};
+
+type ErrorBundle = {
+  title: string;
+  message: string;
+};
+
+type cookies = {
+  session_id: string;
+};

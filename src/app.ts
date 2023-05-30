@@ -1,9 +1,8 @@
 import express, { Application } from "express";
-import { AppDataSource } from "./config/typeorm.config";
-import { migrationRunner } from "./utils/sql_migration_runner";
 import bodyParser from "body-parser";
 import cors from "cors";
 import cookies from "cookie-parser";
+import { configRouters } from "./config/routers.config";
 
 const app: Application = express();
 
@@ -14,9 +13,9 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(cookies());
 
+configRouters(app);
+
 app.listen(PORT, async (): Promise<void> => {
-  await AppDataSource.initialize();
-  await migrationRunner(AppDataSource.createQueryRunner());
   console.log("Database connected");
   console.log("SERVER IS UP ON PORT:", PORT);
 });

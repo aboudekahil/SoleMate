@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cities {
+  city_id Int     @id @default(autoincrement())
+  name    String  @unique() @db.VarChar(255)
+  users   users[]
+}
+
+model feedbacks {
+  feedback_id String @id @db.VarChar(36)
+  content     String @db.VarChar(255)
+  users       users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id     String @db.VarChar(36)
+}
+
+model reviews {
+  review_id                  String @id @default(uuid()) @db.VarChar(36)
+  customer_service_rating    Int
+  shipping_time_rating       Int
+  shipping_quality_rating    Int
+  website_performance_rating Int
+  user                       users  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: Cascade)
+  user_id                    String @db.VarChar(36)
+  shoe                       shoes  @relation(fields: [shoe_id], references: [shoe_id], onDelete: NoAction, onUpdate: Cascade)
+  shoe_id                    String @db.VarChar(36)
+}
+
+model shoe_images {
+  image_id   String                 @id @default(uuid()) @db.VarChar(36)
+  image_url  String                 @db.VarChar(400)
+  image_type shoe_images_image_type
+  shoes      shoes                  @relation(fields: [shoe_id], references: [shoe_id], onDelete: Cascade, onUpdate: Cascade)
+  shoe_id    String                 @db.VarChar(36)
+}
+
+model shoe_sizes {
+  shoesize_id String @id @default(uuid()) @db.VarChar(36)
+  shoe_size   Int
+  price       Int
+  shoes       shoes  @relation(fields: [shoe_id], references: [shoe_id], onDelete: Cascade, onUpdate: Cascade)
+  shoe_id     String @db.VarChar(36)
+}
+
+model shoes {
+  shoe_id     String          @id @default(uuid()) @db.VarChar(36)
+  name        String          @db.VarChar(255)
+  condition   shoes_condition
+  color       String          @db.VarChar(255)
+  users       users           @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  owner_id    String          @db.VarChar(36)
+  reviews     reviews[]
+  shoe_images shoe_images[]
+  shoe_sizes  shoe_sizes[]
+}
+
+model users {
+  user_id        String               @id @default(uuid()) @db.VarChar(36)
+  name           String               @db.VarChar(255)
+  family_name    String               @db.VarChar(255)
+  email_address  String               @unique() @db.VarChar(255)
+  password       String               @db.VarChar(255)
+  payment_option users_payment_option
+  phone_number   String               @unique() @db.VarChar(15)
+  street         String               @db.VarChar(255)
+  building       String               @db.VarChar(255)
+  apartment      String               @db.VarChar(255)
+  is_admin       Boolean              @default(false)
+  is_verified    Boolean              @default(false)
+  omt_payment    omt_payments?
+  whish_payment  whish_payments?
+  cities         cities               @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction)
+  city_id        Int
+  feedbacks      feedbacks[]
+  reviews        reviews[]
+  shoes          shoes[]
+  user_session   user_session[]
+}
+
+model omt_payments {
+  omt_payment_id String @id @default(uuid()) @db.VarChar(36)
+  value          String @unique() @db.VarChar(255)
+  user           users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id        String @unique() @db.VarChar(36)
+}
+
+model whish_payments {
+  whish_payment_id String @id @default(uuid()) @db.VarChar(36)
+  value            String @unique @db.VarChar(255)
+  user             users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id          String @unique @default(uuid()) @db.VarChar(36)
+}
+
+model user_session {
+  session_id   String   @id @default(uuid()) @db.VarChar(36)
+  user         users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id      String   @unique @db.VarChar(36)
+  timeout_date DateTime
+}
+
+enum shoes_condition {
+  New
+  Barely_worn @map("Barely worn")
+  Worn
+}
+
+enum shoe_images_image_type {
+  Front
+  Back
+  Sides_1   @map("Sides 1")
+  Sides_2   @map("Sides 2")
+  Tag
+  Insole
+  Box_Front @map("Box Front")
+  Box_Tag   @map("Box Tag")
+  Box_date  @map("Box date")
+  Other
+}
+
+enum users_payment_option {
+  OMT
+  Wish
+  Both
+}

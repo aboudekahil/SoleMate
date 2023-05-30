@@ -9,30 +9,29 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WhishPayment = void 0;
+exports.Feedback = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const class_validator_1 = require("class-validator");
-let WhishPayment = class WhishPayment {
-    whishpayment_id;
-    value;
+let Feedback = class Feedback {
+    feedback_id;
     user;
+    content;
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)("uuid"),
     __metadata("design:type", String)
-], WhishPayment.prototype, "whishpayment_id", void 0);
+], Feedback.prototype, "feedback_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true, nullable: false }),
-    (0, class_validator_1.Length)(1),
-    __metadata("design:type", String)
-], WhishPayment.prototype, "value", void 0);
-__decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User, { cascade: true }),
-    (0, typeorm_1.JoinColumn)(),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.feedbacks, { nullable: false }),
     __metadata("design:type", user_entity_1.User)
-], WhishPayment.prototype, "user", void 0);
-WhishPayment = __decorate([
-    (0, typeorm_1.Entity)({ name: "whish_payments" })
-], WhishPayment);
-exports.WhishPayment = WhishPayment;
+], Feedback.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: false }),
+    (0, class_validator_1.Length)(1, 280),
+    __metadata("design:type", String)
+], Feedback.prototype, "content", void 0);
+Feedback = __decorate([
+    (0, typeorm_1.Entity)({ name: "feedbacks" })
+], Feedback);
+exports.Feedback = Feedback;

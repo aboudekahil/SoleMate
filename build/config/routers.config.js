@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * This file is used for configuring all the endpoints in the project, as well
+ * as separating the post requests to an /api/ endpoint.
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -26,9 +30,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const UserController = __importStar(require("../controllers/user.controller"));
-const router = express_1.default.Router({ mergeParams: true });
-router.post("/signup", UserController.signup);
-router.post("/login", UserController.login);
-exports.default = { prefix: "user", router };
+exports.configRouters = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const configRouters = (app) => {
+    const basePath = path_1.default.join(process.cwd(), "build", "routes");
+    const routesDir = fs_1.default.readdirSync(basePath);
+    for (const routeFile of routesDir) {
+        Promise.resolve(`${path_1.default.join(basePath, routeFile)}`).then(s => __importStar(require(s))).then((route) => {
+            app.use(`/api/v1/${route.default.prefix}`, route.default.router);
+        });
+    }
+};
+exports.configRouters = configRouters;

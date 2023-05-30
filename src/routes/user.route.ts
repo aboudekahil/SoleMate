@@ -1,7 +1,9 @@
 import express from "express";
+import * as UserController from "../controllers/user.controller";
 
-export const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const userController = require("../controllers/user.controller");
+router.post("/signup", UserController.signup);
+router.post("/login", UserController.login);
 
-router.get("/");
+export default { prefix: "user", router };

@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 // Users
 const typeorm_1 = require("typeorm");
-const city_enitity_1 = require("./city.enitity");
+const city_entity_1 = require("./city.entity");
 const class_validator_1 = require("class-validator");
 const shoe_entity_1 = require("./shoe.entity");
 const review_entity_1 = require("./review.entity");
@@ -77,8 +77,8 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "phone_number", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => city_enitity_1.City, (city) => city, { nullable: false }),
-    __metadata("design:type", city_enitity_1.City)
+    (0, typeorm_1.ManyToOne)(() => city_entity_1.City, (city) => city, { nullable: false }),
+    __metadata("design:type", city_entity_1.City)
 ], User.prototype, "city", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: false }),

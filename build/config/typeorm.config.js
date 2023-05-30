@@ -2,15 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppDataSource = void 0;
 const typeorm_1 = require("typeorm");
-const city_enitity_1 = require("../enitities/city.enitity");
-const feedback_entity_1 = require("../enitities/feedback.entity");
-const omtpayment_entity_1 = require("../enitities/omtpayment.entity");
-const review_entity_1 = require("../enitities/review.entity");
-const shoe_entity_1 = require("../enitities/shoe.entity");
-const shoeimage_entity_1 = require("../enitities/shoeimage.entity");
-const shoesize_entity_1 = require("../enitities/shoesize.entity");
-const user_entity_1 = require("../enitities/user.entity");
-const whishpayment_entity_1 = require("../enitities/whishpayment.entity");
+const city_entity_1 = require("../entities/city.entity");
+const feedback_entity_1 = require("../entities/feedback.entity");
+const omtpayment_entity_1 = require("../entities/omtpayment.entity");
+const review_entity_1 = require("../entities/review.entity");
+const shoe_entity_1 = require("../entities/shoe.entity");
+const shoeimage_entity_1 = require("../entities/shoeimage.entity");
+const shoesize_entity_1 = require("../entities/shoesize.entity");
+const user_entity_1 = require("../entities/user.entity");
+const whishpayment_entity_1 = require("../entities/whishpayment.entity");
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "mysql",
     host: "localhost",
@@ -18,12 +18,12 @@ exports.AppDataSource = new typeorm_1.DataSource({
     username: "root",
     password: "root",
     database: "solemate",
-    synchronize: true,
+    // synchronize: true,
     logging: true,
     // DO NOT RUN THIS IN PROD
-    dropSchema: true,
+    // dropSchema: true,
     entities: [
-        city_enitity_1.City,
+        city_entity_1.City,
         feedback_entity_1.Feedback,
         omtpayment_entity_1.OmtPayment,
         review_entity_1.Review,

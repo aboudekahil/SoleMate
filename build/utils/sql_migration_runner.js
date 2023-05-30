@@ -10,7 +10,7 @@ const readSqlFile = (filepath) => {
     return fs_1.default.readFileSync(filepath).toString();
 };
 const migrationRunner = async (queryRunner) => {
-    const basePath = path_1.default.join(process.cwd(), "src", "sql");
+    const basePath = path_1.default.join(process.cwd(), "sql");
     const files = fs_1.default.readdirSync(basePath);
     const filePaths = files.map((fileName) => {
         return path_1.default.join(basePath, fileName);

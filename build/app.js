@@ -4,16 +4,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const typeorm_config_1 = require("./config/typeorm.config");
-const sql_migration_runner_1 = require("./utils/sql_migration_runner");
+const body_parser_1 = __importDefault(require("body-parser"));
+const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const routers_config_1 = require("./config/routers.config");
 const app = (0, express_1.default)();
 const PORT = 3001;
-app.use("/", (req, res) => {
-    res.send("Hello world!");
-});
+app.use(body_parser_1.default.urlencoded({ extended: true }));
+app.use(body_parser_1.default.json());
+app.use((0, cors_1.default)());
+app.use((0, cookie_parser_1.default)());
+(0, routers_config_1.configRouters)(app);
 app.listen(PORT, async () => {
-    await typeorm_config_1.AppDataSource.initialize();
-    await (0, sql_migration_runner_1.migrationRunner)(typeorm_config_1.AppDataSource.createQueryRunner());
     console.log("Database connected");
     console.log("SERVER IS UP ON PORT:", PORT);
 });

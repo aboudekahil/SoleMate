@@ -28,8 +28,8 @@ __decorate([
     __metadata("design:type", String)
 ], OmtPayment.prototype, "value", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)(),
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User, { cascade: true }),
+    (0, typeorm_1.JoinColumn)({ name: "userUserId" }),
     __metadata("design:type", user_entity_1.User)
 ], OmtPayment.prototype, "user", void 0);
 OmtPayment = __decorate([
