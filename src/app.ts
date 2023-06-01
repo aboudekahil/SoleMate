@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import cookies from "cookie-parser";
 import { configRouters } from "./config/routers.config";
+import path from "path";
 
 const app: Application = express();
 
@@ -19,3 +20,5 @@ app.listen(PORT, async (): Promise<void> => {
   console.log("Database connected");
   console.log("SERVER IS UP ON PORT:", PORT);
 });
+
+app.use("/static", express.static(path.join(process.cwd(), "public")));

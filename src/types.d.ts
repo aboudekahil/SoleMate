@@ -23,3 +23,16 @@ type ErrorBundle = {
 type cookies = {
   session_id: string;
 };
+
+type ShoeSize = {
+  size: number;
+  price: number;
+  quantity: number;
+};
+
+type ShoeCreateBody = {
+  name: string;
+  condition: shoes_condition;
+  color: string;
+  sizes: any;
+};

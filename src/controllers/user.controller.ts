@@ -1,9 +1,27 @@
-import { Request, Response } from "express";
+import {Request, Response} from "express";
 import UserService from "../services/userService";
-import { InvalidError } from "../errors/InvalidError";
-import { user_session_handler } from "../config/session.config";
+import {InvalidError} from "../errors/InvalidError";
+import {user_session_handler} from "../config/session.config";
+import {constants} from "http2";
 
-export const signup = async (req: Request, res: Response) => {
+// {
+//   "apartment": "123",
+//     "building": "456",
+//     "city": "Tyr",
+//     "email_address": "aboudehkahil@gmail.com",
+//     "family_name": "kahil",
+//     "name": "abd el kader kahil",
+//     "password": "aboudeh2004",
+//     "payment_option": "Whish",
+//     "payment_values": {
+//   "OMT": null,
+//       "Whish": "123456789"
+// },
+//   "phone_number": "71493037",
+//     "street": "Bayak"
+// }
+
+export async function signup(req: Request, res: Response) {
   try {
     const user_service = new UserService();
 
@@ -18,17 +36,25 @@ export const signup = async (req: Request, res: Response) => {
     res.cookie("session_id", session.session_id, {
       httpOnly: true,
       expires: session.timeout_date,
+      secure: true,
     });
 
-    res.status(200).json({ message: "User created successfully" });
+    res
+      .status(constants.HTTP_STATUS_CREATED)
+      .json({ message: "User created successfully" });
   } catch (error) {
     if (error instanceof InvalidError)
-      res.status(403).json(JSON.parse(error.toString()));
-    else res.status(500).json({ message: "Internal server error" });
+      res
+        .status(constants.HTTP_STATUS_FORBIDDEN)
+        .json(JSON.parse(error.toString()));
+    else
+      res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .json({ message: "Internal server error" });
   }
-};
+}
 
-export const login = async (req: Request, res: Response) => {
+export async function login(req: Request, res: Response) {
   const user_service = new UserService();
 
   const found_user = await user_service.findUserByEmailAndPassword(
@@ -37,16 +63,10 @@ export const login = async (req: Request, res: Response) => {
   );
 
   if (!found_user) {
-    res.status(403).json(
-      JSON.parse(
-        new InvalidError([
-          {
-            title: "Invalid credentials",
-            message: "Email or password is incorrect",
-          },
-        ]).toString()
-      )
-    );
+    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
+      title: "Invalid credentials",
+      message: "Email or password is incorrect",
+    });
     return;
   }
 
@@ -57,5 +77,7 @@ export const login = async (req: Request, res: Response) => {
     expires: session.timeout_date,
   });
 
-  res.status(200).json({ message: "User logged in successfully" });
-};
+  res
+    .status(constants.HTTP_STATUS_OK)
+    .json({ message: "User logged in successfully" });
+}

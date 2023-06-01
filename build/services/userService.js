@@ -15,6 +15,7 @@ class default_1 {
                 name: city,
             },
         });
+        debugger;
         if (!found_city) {
             throw new InvalidError_1.InvalidError([
                 {
@@ -85,7 +86,7 @@ class default_1 {
         });
     };
     async hashPassword(password) {
-        return await bcrypt_1.default.hash(password, 10);
+        return await bcrypt_1.default.hash(password, 15);
     }
     async comparePassword(password, hashed_password) {
         return await bcrypt_1.default.compare(password, hashed_password);

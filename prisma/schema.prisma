@@ -44,6 +44,7 @@ model shoe_sizes {
   shoesize_id String @id @default(uuid()) @db.VarChar(36)
   shoe_size   Int
   price       Int
+  quantity    Int
   shoes       shoes  @relation(fields: [shoe_id], references: [shoe_id], onDelete: Cascade, onUpdate: Cascade)
   shoe_id     String @db.VarChar(36)
 }
@@ -125,6 +126,6 @@ enum shoe_images_image_type {
 
 enum users_payment_option {
   OMT
-  Wish
+  Whish
   Both
 }

@@ -7,7 +7,24 @@ exports.login = exports.signup = void 0;
 const userService_1 = __importDefault(require("../services/userService"));
 const InvalidError_1 = require("../errors/InvalidError");
 const session_config_1 = require("../config/session.config");
-const signup = async (req, res) => {
+const http2_1 = require("http2");
+// {
+//   "apartment": "123",
+//     "building": "456",
+//     "city": "Tyr",
+//     "email_address": "aboudehkahil@gmail.com",
+//     "family_name": "kahil",
+//     "name": "abd el kader kahil",
+//     "password": "aboudeh2004",
+//     "payment_option": "Whish",
+//     "payment_values": {
+//   "OMT": null,
+//       "Whish": "123456789"
+// },
+//   "phone_number": "71493037",
+//     "street": "Bayak"
+// }
+async function signup(req, res) {
     try {
         const user_service = new userService_1.default();
         req.body.password = await user_service.hashPassword(req.body.password);
@@ -16,27 +33,32 @@ const signup = async (req, res) => {
         res.cookie("session_id", session.session_id, {
             httpOnly: true,
             expires: session.timeout_date,
+            secure: true,
         });
-        res.status(200).json({ message: "User created successfully" });
+        res
+            .status(http2_1.constants.HTTP_STATUS_CREATED)
+            .json({ message: "User created successfully" });
     }
     catch (error) {
         if (error instanceof InvalidError_1.InvalidError)
-            res.status(403).json(JSON.parse(error.toString()));
+            res
+                .status(http2_1.constants.HTTP_STATUS_FORBIDDEN)
+                .json(JSON.parse(error.toString()));
         else
-            res.status(500).json({ message: "Internal server error" });
+            res
+                .status(http2_1.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+                .json({ message: "Internal server error" });
     }
-};
+}
 exports.signup = signup;
-const login = async (req, res) => {
+async function login(req, res) {
     const user_service = new userService_1.default();
     const found_user = await user_service.findUserByEmailAndPassword(req.body.email_address, req.body.password);
     if (!found_user) {
-        res.status(403).json(JSON.parse(new InvalidError_1.InvalidError([
-            {
-                title: "Invalid credentials",
-                message: "Email or password is incorrect",
-            },
-        ]).toString()));
+        res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
+            title: "Invalid credentials",
+            message: "Email or password is incorrect",
+        });
         return;
     }
     const session = await session_config_1.user_session_handler.createSession(found_user.user_id);
@@ -44,6 +66,8 @@ const login = async (req, res) => {
         httpOnly: true,
         expires: session.timeout_date,
     });
-    res.status(200).json({ message: "User logged in successfully" });
-};
+    res
+        .status(http2_1.constants.HTTP_STATUS_OK)
+        .json({ message: "User logged in successfully" });
+}
 exports.login = login;

@@ -25,6 +25,8 @@ export default class {
       },
     });
 
+    debugger;
+
     if (!found_city) {
       throw new InvalidError([
         {
@@ -101,7 +103,7 @@ export default class {
   };
 
   async hashPassword(password: string) {
-    return await bcrypt.hash(password, 10);
+    return await bcrypt.hash(password, 15);
   }
 
   async comparePassword(password: string, hashed_password: string) {
