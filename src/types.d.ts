@@ -34,5 +34,5 @@ type ShoeCreateBody = {
   name: string;
   condition: shoes_condition;
   color: string;
-  sizes: any;
+  sizes: string;
 };

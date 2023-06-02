@@ -25,9 +25,37 @@ function multerErrorHandlerMiddleware(upload) {
     };
 }
 exports.multerErrorHandlerMiddleware = multerErrorHandlerMiddleware;
-const addShoe = async (req, res) => {
+async function addShoe(req, res) {
     let { name, condition, color, sizes } = req.body;
-    sizes = JSON.parse(sizes);
+    if (!(condition in client_1.shoes_condition)) {
+        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
+            title: "Bad request",
+            message: "Invalid condition",
+        });
+        return;
+    }
+    if (!name || !color || !sizes) {
+        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
+            title: "Bad request",
+            message: "Invalid input",
+        });
+    }
+    const sizesJSON = JSON.parse(sizes);
+    if (!Array.isArray(sizesJSON)) {
+        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
+            title: "Bad request",
+            message: "Invalid sizes",
+        });
+    }
+    for (const size of sizesJSON) {
+        if (size.price <= 0 || size.quantity <= 0 || size.size <= 0) {
+            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
+                title: "Bad request",
+                message: "Invalid sizes input",
+            });
+            return;
+        }
+    }
     const files = req.files;
     if (!files) {
         res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
@@ -105,7 +133,7 @@ const addShoe = async (req, res) => {
                 condition,
                 color,
                 shoe_sizes: {
-                    create: sizes.map((size) => ({
+                    create: sizesJSON.map((size) => ({
                         shoe_size: size.size,
                         price: size.price,
                         quantity: size.quantity,
@@ -129,5 +157,5 @@ const addShoe = async (req, res) => {
             message: "Missing images",
         });
     }
-};
+}
 exports.addShoe = addShoe;

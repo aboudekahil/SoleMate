@@ -10,10 +10,11 @@ class UserSessionHandler {
     this.defaultExpiration = 60 * 60 * 24 * 365 * 1000; // one year in ms
   }
 
-  async createSession(userId: string): Promise<user_session> {
+  async createSession(user_id: string): Promise<user_session> {
+    debugger;
     const session = await this.prisma.user_session.create({
       data: {
-        user_id: userId,
+        user_id: user_id,
         timeout_date: this.getSessionTimeout(),
       },
     });

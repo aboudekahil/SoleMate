@@ -1,7 +1,6 @@
 import { InvalidError } from "../errors/InvalidError";
 import bcrypt from "bcrypt";
 import { prisma } from "../config/prisma.config";
-import { isEmail } from "class-validator";
 
 export default class {
   constructor() {}
@@ -25,8 +24,6 @@ export default class {
       },
     });
 
-    debugger;
-
     if (!found_city) {
       throw new InvalidError([
         {
@@ -35,43 +32,6 @@ export default class {
         },
       ]);
     }
-
-    if (!isEmail(email_address)) {
-      throw new InvalidError([
-        {
-          title: "Invalid email",
-          message: "Email is not valid",
-        },
-      ]);
-    }
-
-    if (payment_option === "Whish" && !Whish) {
-      throw new InvalidError([
-        {
-          title: "Invalid payment values",
-          message: "Payment values do not match payment option",
-        },
-      ]);
-    }
-
-    if (payment_option === "OMT" && !OMT) {
-      throw new InvalidError([
-        {
-          title: "Invalid payment values",
-          message: "Payment values do not match payment option",
-        },
-      ]);
-    }
-
-    if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
-      throw new InvalidError([
-        {
-          title: "Invalid payment values",
-          message: "Payment values are not provided or too short",
-        },
-      ]);
-    }
-
     return prisma.users.create({
       data: {
         name,

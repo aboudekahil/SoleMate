@@ -2,7 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { constants } from "http2";
-import { shoe_images_image_type } from "@prisma/client";
+import { shoe_images_image_type, shoes_condition } from "@prisma/client";
 import { MulterError } from "multer";
 
 export function multerErrorHandlerMiddleware(upload: RequestHandler) {
@@ -23,10 +23,42 @@ export function multerErrorHandlerMiddleware(upload: RequestHandler) {
   };
 }
 
-export const addShoe = async (req: Request, res: Response) => {
+export async function addShoe(req: Request, res: Response) {
   let { name, condition, color, sizes }: ShoeCreateBody = req.body;
 
-  sizes = JSON.parse(sizes);
+  if (!(condition in shoes_condition)) {
+    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid condition",
+    });
+    return;
+  }
+
+  if (!name || !color || !sizes) {
+    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid input",
+    });
+  }
+
+  const sizesJSON: ShoeSize[] = JSON.parse(sizes);
+
+  if (!Array.isArray(sizesJSON)) {
+    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid sizes",
+    });
+  }
+
+  for (const size of sizesJSON) {
+    if (size.price <= 0 || size.quantity <= 0 || size.size <= 0) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad request",
+        message: "Invalid sizes input",
+      });
+      return;
+    }
+  }
 
   const files = req.files as
     | { [fieldname: string]: Express.Multer.File[] }
@@ -120,7 +152,7 @@ export const addShoe = async (req: Request, res: Response) => {
         condition,
         color,
         shoe_sizes: {
-          create: (sizes as ShoeSize[]).map((size) => ({
+          create: sizesJSON.map((size) => ({
             shoe_size: size.size,
             price: size.price,
             quantity: size.quantity,
@@ -143,4 +175,4 @@ export const addShoe = async (req: Request, res: Response) => {
       message: "Missing images",
     });
   }
-};
+}

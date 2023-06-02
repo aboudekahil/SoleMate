@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const InvalidError_1 = require("../errors/InvalidError");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_config_1 = require("../config/prisma.config");
-const class_validator_1 = require("class-validator");
 class default_1 {
     constructor() { }
     signUserUp = async ({ apartment, building, city, email_address, family_name, name, password, payment_option, payment_values: { OMT, Whish }, phone_number, street, }) => {
@@ -15,44 +14,11 @@ class default_1 {
                 name: city,
             },
         });
-        debugger;
         if (!found_city) {
             throw new InvalidError_1.InvalidError([
                 {
                     title: "Invalid city",
                     message: "City does not exist",
-                },
-            ]);
-        }
-        if (!(0, class_validator_1.isEmail)(email_address)) {
-            throw new InvalidError_1.InvalidError([
-                {
-                    title: "Invalid email",
-                    message: "Email is not valid",
-                },
-            ]);
-        }
-        if (payment_option === "Whish" && !Whish) {
-            throw new InvalidError_1.InvalidError([
-                {
-                    title: "Invalid payment values",
-                    message: "Payment values do not match payment option",
-                },
-            ]);
-        }
-        if (payment_option === "OMT" && !OMT) {
-            throw new InvalidError_1.InvalidError([
-                {
-                    title: "Invalid payment values",
-                    message: "Payment values do not match payment option",
-                },
-            ]);
-        }
-        if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
-            throw new InvalidError_1.InvalidError([
-                {
-                    title: "Invalid payment values",
-                    message: "Payment values are not provided or too short",
                 },
             ]);
         }

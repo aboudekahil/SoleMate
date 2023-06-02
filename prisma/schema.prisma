@@ -14,22 +14,24 @@ model cities {
 }
 
 model feedbacks {
-  feedback_id String @id @db.VarChar(36)
-  content     String @db.VarChar(255)
-  users       users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
-  user_id     String @db.VarChar(36)
+  feedback_id String   @id @db.VarChar(36)
+  content     String   @db.VarChar(255)
+  users       users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id     String   @db.VarChar(36)
+  createdAt   DateTime @default(now()) @db.DateTime(6)
 }
 
 model reviews {
-  review_id                  String @id @default(uuid()) @db.VarChar(36)
+  review_id                  String   @id @default(uuid()) @db.VarChar(36)
   customer_service_rating    Int
   shipping_time_rating       Int
   shipping_quality_rating    Int
   website_performance_rating Int
-  user                       users  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: Cascade)
-  user_id                    String @db.VarChar(36)
-  shoe                       shoes  @relation(fields: [shoe_id], references: [shoe_id], onDelete: NoAction, onUpdate: Cascade)
-  shoe_id                    String @db.VarChar(36)
+  user                       users    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: Cascade)
+  user_id                    String   @db.VarChar(36)
+  shoe                       shoes    @relation(fields: [shoe_id], references: [shoe_id], onDelete: NoAction, onUpdate: Cascade)
+  shoe_id                    String   @db.VarChar(36)
+  createdAt                  DateTime @default(now()) @db.DateTime(6)
 }
 
 model shoe_images {
@@ -56,9 +58,12 @@ model shoes {
   color       String          @db.VarChar(255)
   users       users           @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
   owner_id    String          @db.VarChar(36)
+  verified    Boolean         @default(false)
   reviews     reviews[]
   shoe_images shoe_images[]
   shoe_sizes  shoe_sizes[]
+  orders      orders[]
+  createdAt   DateTime        @default(now()) @db.DateTime(6)
 }
 
 model users {
@@ -82,6 +87,19 @@ model users {
   reviews        reviews[]
   shoes          shoes[]
   user_session   user_session[]
+  orders         orders[]
+  createdAt      DateTime             @default(now()) @db.DateTime(6)
+  updatedAt      DateTime             @updatedAt @db.DateTime(6)
+}
+
+model orders {
+  order_id  String       @id @default(uuid()) @db.VarChar(36)
+  createdAt DateTime     @default(now()) @db.DateTime(6)
+  state     order_status @default(Pending)
+  user      users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  user_id   String       @db.VarChar(36)
+  shoe      shoes        @relation(fields: [shoe_id], references: [shoe_id], onDelete: Cascade, onUpdate: Cascade)
+  shoe_id   String       @db.VarChar(36)
 }
 
 model omt_payments {
@@ -128,4 +146,13 @@ enum users_payment_option {
   OMT
   Whish
   Both
+}
+
+enum order_status {
+  Pending
+  Accepted
+  Rejected
+  Shipped
+  Delivered
+  Invalid
 }

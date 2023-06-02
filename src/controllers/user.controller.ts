@@ -3,6 +3,8 @@ import UserService from "../services/userService";
 import {InvalidError} from "../errors/InvalidError";
 import {user_session_handler} from "../config/session.config";
 import {constants} from "http2";
+import {isEmail, isEnum, isPhoneNumber} from "class-validator";
+import {users_payment_option} from "@prisma/client";
 
 // {
 //   "apartment": "123",
@@ -23,6 +25,72 @@ import {constants} from "http2";
 
 export async function signup(req: Request, res: Response) {
   try {
+    if (!req.body) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .json({ title: "Bad Request", message: "Request body is empty" });
+      return;
+    }
+
+    const {
+      apartment,
+      building,
+      city,
+      email_address,
+      family_name,
+      name,
+      password,
+      payment_option,
+      payment_values: { OMT, Whish },
+      phone_number,
+      street,
+    }: UserCreateBody = req.body;
+
+    if (!isEnum(payment_option, users_payment_option)) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Payment option is not valid",
+      });
+      return;
+    }
+
+    if (!isEmail(email_address)) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Email is not valid",
+      });
+      return;
+    }
+
+    if (!isPhoneNumber(phone_number, "LB")) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Phone number is not valid",
+      });
+      return;
+    }
+
+    if (
+      (payment_option === "Whish" && !Whish) ||
+      (payment_option === "OMT" && !OMT)
+    ) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Payment values do not match payment option",
+      });
+
+      return;
+    }
+
+    if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Payment values must be at least 3 characters long",
+      });
+
+      return;
+    }
+
     const user_service = new UserService();
 
     req.body.password = await user_service.hashPassword(req.body.password);
@@ -36,7 +104,7 @@ export async function signup(req: Request, res: Response) {
     res.cookie("session_id", session.session_id, {
       httpOnly: true,
       expires: session.timeout_date,
-      secure: true,
+      // secure: true,
     });
 
     res
@@ -47,6 +115,11 @@ export async function signup(req: Request, res: Response) {
       res
         .status(constants.HTTP_STATUS_FORBIDDEN)
         .json(JSON.parse(error.toString()));
+    else if (error instanceof TypeError)
+      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+        title: "Bad Request",
+        message: "Request body is empty",
+      });
     else
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -56,7 +129,6 @@ export async function signup(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   const user_service = new UserService();
-
   const found_user = await user_service.findUserByEmailAndPassword(
     req.body.email_address,
     req.body.password
@@ -75,6 +147,7 @@ export async function login(req: Request, res: Response) {
   res.cookie("session_id", session.session_id, {
     httpOnly: true,
     expires: session.timeout_date,
+    // secure: true,
   });
 
   res
