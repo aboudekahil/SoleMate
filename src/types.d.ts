@@ -35,4 +35,5 @@ type ShoeCreateBody = {
   condition: shoes_condition;
   color: string;
   sizes: string;
+  fit: shoe_fit;
 };

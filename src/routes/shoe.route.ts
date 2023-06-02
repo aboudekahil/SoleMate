@@ -23,4 +23,6 @@ router.post(
   ShoeController.addShoe
 );
 
+router.get("/", ShoeController.getShoes);
+
 export default { prefix: "shoe", router };

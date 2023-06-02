@@ -43,7 +43,6 @@ async function placeOrder(req, res) {
     catch (error) {
         if (error instanceof library_1.PrismaClientKnownRequestError) {
             if (error.code === "P2025") {
-                console.log(error.cause);
                 res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
                     title: "Bad request",
                     message: "Invalid shoe_id",

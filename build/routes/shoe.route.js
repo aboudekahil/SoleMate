@@ -42,4 +42,5 @@ router.post("/", ShoeController.multerErrorHandlerMiddleware(multer_config_1.upl
     { name: "box_date", maxCount: 1 },
     { name: "other", maxCount: 4 },
 ])), ShoeController.addShoe);
+router.get("/", ShoeController.getShoes);
 exports.default = { prefix: "shoe", router };

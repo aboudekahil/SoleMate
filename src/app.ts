@@ -1,9 +1,12 @@
+import dotenv from "dotenv";
 import express, { Application } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import cookies from "cookie-parser";
 import { configRouters } from "./config/routers.config";
 import path from "path";
+
+dotenv.config();
 
 const app: Application = express();
 

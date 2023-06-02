@@ -2,8 +2,48 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { constants } from "http2";
-import { shoe_images_image_type, shoes_condition } from "@prisma/client";
+import {
+  shoe_fit,
+  shoe_images_image_type,
+  shoes_condition,
+} from "@prisma/client";
 import { MulterError } from "multer";
+import { isEnum } from "class-validator";
+import path from "path";
+
+export async function getShoes(req: Request, res: Response) {
+  console.log(process.env.SEX);
+  const shoes = await prisma.shoes.findMany({
+    where: {
+      orders: {
+        none: {},
+      },
+    },
+    include: {
+      shoe_images: {
+        select: {
+          image_url: true,
+          image_type: true,
+        },
+      },
+      shoe_sizes: {
+        select: {
+          shoe_size: true,
+          price: true,
+          quantity: true,
+        },
+      },
+      users: {
+        select: {
+          name: true,
+          family_name: true,
+        },
+      },
+    },
+  });
+
+  res.status(constants.HTTP_STATUS_OK).json(shoes);
+}
 
 export function multerErrorHandlerMiddleware(upload: RequestHandler) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -17,19 +57,39 @@ export function multerErrorHandlerMiddleware(upload: RequestHandler) {
         res
           .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
           .send(err + "Upload failed due to unknown error");
+      } else {
+        next();
       }
-      next();
     });
   };
 }
 
 export async function addShoe(req: Request, res: Response) {
-  let { name, condition, color, sizes }: ShoeCreateBody = req.body;
+  let { name, condition, color, sizes, fit }: ShoeCreateBody = req.body;
 
-  if (!(condition in shoes_condition)) {
+  const { session_id }: cookies = req.cookies;
+  const user_session = await user_session_handler.getSession(session_id);
+
+  if (!user_session) {
+    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
+      title: "Unauthorized",
+      message: "You are not logged in",
+    });
+    return;
+  }
+
+  if (!isEnum(condition, shoes_condition)) {
     res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
       title: "Bad request",
       message: "Invalid condition",
+    });
+    return;
+  }
+
+  if (!isEnum(fit, shoe_fit)) {
+    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid fit",
     });
     return;
   }
@@ -39,6 +99,7 @@ export async function addShoe(req: Request, res: Response) {
       title: "Bad request",
       message: "Invalid input",
     });
+    return;
   }
 
   const sizesJSON: ShoeSize[] = JSON.parse(sizes);
@@ -48,6 +109,7 @@ export async function addShoe(req: Request, res: Response) {
       title: "Bad request",
       message: "Invalid sizes",
     });
+    return;
   }
 
   for (const size of sizesJSON) {
@@ -72,17 +134,6 @@ export async function addShoe(req: Request, res: Response) {
     return;
   }
 
-  const { session_id }: cookies = req.cookies;
-  const user_session = await user_session_handler.getSession(session_id);
-
-  if (!user_session) {
-    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
-      title: "Unauthorized",
-      message: "You are not logged in",
-    });
-    return;
-  }
-
   if (
     files.front &&
     files.back &&
@@ -100,39 +151,57 @@ export async function addShoe(req: Request, res: Response) {
     }[] = [
       {
         image_type: shoe_images_image_type.Front,
-        image_url: files.front[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.front[0].path)
+        )}/${path.basename(files.front[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Back,
-        image_url: files.back[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.back[0].path)
+        )}/${path.basename(files.back[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Sides_1,
-        image_url: files.sides1[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.sides1[0].path)
+        )}/${path.basename(files.sides1[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Sides_2,
-        image_url: files.sides2[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.sides2[0].path)
+        )}/${path.basename(files.sides2[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Tag,
-        image_url: files.tag[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.tag[0].path)
+        )}/${path.basename(files.tag[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Insole,
-        image_url: files.insole[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.insole[0].path)
+        )}/${path.basename(files.insole[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Box_Front,
-        image_url: files.box_front[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.box_front[0].path)
+        )}/${path.basename(files.box_front[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Box_Tag,
-        image_url: files.box_tag[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.box_tag[0].path)
+        )}/${path.basename(files.box_tag[0].path)}`,
       },
       {
         image_type: shoe_images_image_type.Box_date,
-        image_url: files.box_date[0].path,
+        image_url: `/${process.env.STATIC_URL}/${path.basename(
+          path.dirname(files.box_date[0].path)
+        )}/${path.basename(files.box_date[0].path)}`,
       },
     ];
 
@@ -141,7 +210,9 @@ export async function addShoe(req: Request, res: Response) {
       shoeImages.push(
         ...files.other.map((image) => ({
           image_type: shoe_images_image_type.Other,
-          image_url: image.path,
+          image_url: `/${process.env.STATIC_URL}/${path.basename(
+            path.dirname(image.path)
+          )}/${path.basename(image.path)}`,
         }))
       );
     }
@@ -151,6 +222,7 @@ export async function addShoe(req: Request, res: Response) {
         name,
         condition,
         color,
+        fit,
         shoe_sizes: {
           create: sizesJSON.map((size) => ({
             shoe_size: size.size,

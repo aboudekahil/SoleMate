@@ -59,6 +59,7 @@ model shoes {
   users       users           @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
   owner_id    String          @db.VarChar(36)
   verified    Boolean         @default(false)
+  fit         shoe_fit
   reviews     reviews[]
   shoe_images shoe_images[]
   shoe_sizes  shoe_sizes[]
@@ -155,4 +156,9 @@ enum order_status {
   Shipped
   Delivered
   Invalid
+}
+
+enum shoe_fit {
+  Male
+  Female
 }
