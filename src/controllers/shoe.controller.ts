@@ -3,6 +3,7 @@ import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { constants } from "http2";
 import {
+  Prisma,
   shoe_fit,
   shoe_images_image_type,
   shoes_condition,
@@ -12,13 +13,39 @@ import { isEnum } from "class-validator";
 import path from "path";
 
 export async function getShoes(req: Request, res: Response) {
-  console.log(process.env.SEX);
+  const LIMIT = 20;
+  const sort_by = req.query.sort_by as SortByType;
+  const order = req.query.order as OrderType;
+  const search = req.query.search as string | undefined;
+  const page = parseInt(req.query.page as string | "0");
+
+  if (!isEnum(sort_by, SortBy)) {
+    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid sort_by value",
+    });
+  }
+
+  if (!isEnum(order, Order)) {
+    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad request",
+      message: "Invalid order value",
+    });
+  }
+
+  const where: Prisma.shoesWhereInput = {
+    orders: { none: {} },
+  };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search } },
+      { color: { contains: search } },
+    ];
+  }
+
   const shoes = await prisma.shoes.findMany({
-    where: {
-      orders: {
-        none: {},
-      },
-    },
+    where,
     include: {
       shoe_images: {
         select: {
@@ -27,6 +54,9 @@ export async function getShoes(req: Request, res: Response) {
         },
       },
       shoe_sizes: {
+        orderBy: {
+          shoe_size: "asc",
+        },
         select: {
           shoe_size: true,
           price: true,
@@ -40,9 +70,36 @@ export async function getShoes(req: Request, res: Response) {
         },
       },
     },
+    skip: page * LIMIT,
+    take: LIMIT,
   });
 
-  res.status(constants.HTTP_STATUS_OK).json(shoes);
+  const sortedShoes = shoes.sort((a, b) => {
+    switch (sort_by) {
+      case SortBy.SIZE:
+        const aSizes = a.shoe_sizes.map((size) => size.shoe_size);
+        const bSizes = b.shoe_sizes.map((size) => size.shoe_size);
+        return order === "asc" ? aSizes[0] - bSizes[0] : bSizes[0] - aSizes[0];
+      case SortBy.PRICE:
+        const aPrices = a.shoe_sizes.map((size) => size.price);
+        const bPrices = b.shoe_sizes.map((size) => size.price);
+        return order === "asc"
+          ? aPrices[0] - bPrices[0]
+          : bPrices[0] - aPrices[0];
+      case SortBy.NAME:
+        return order === "asc"
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+      case SortBy.COLOR:
+        return order === "asc"
+          ? a.color.localeCompare(b.color)
+          : b.color.localeCompare(a.color);
+      default:
+        return 0;
+    }
+  });
+
+  res.status(constants.HTTP_STATUS_OK).json(sortedShoes);
 }
 
 export function multerErrorHandlerMiddleware(upload: RequestHandler) {

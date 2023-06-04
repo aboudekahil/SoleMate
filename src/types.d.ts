@@ -37,3 +37,19 @@ type ShoeCreateBody = {
   sizes: string;
   fit: shoe_fit;
 };
+
+enum Order {
+  ASC = "asc",
+  DESC = "desc",
+}
+
+type OrderType = Order | undefined;
+
+enum SortBy {
+  PRICE = "price",
+  SIZE = "size",
+  NAME = "name",
+  COLOR = "color",
+}
+
+type SortByType = SortBy | undefined;
