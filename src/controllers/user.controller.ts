@@ -5,6 +5,7 @@ import {user_session_handler} from "../config/session.config";
 import {constants} from "http2";
 import {isEmail, isEnum, isPhoneNumber} from "class-validator";
 import {users_payment_option} from "@prisma/client";
+import {handleUnauthorizedRequest} from "../errors/httpErrorHandling";
 
 // {
 //   "apartment": "123",
@@ -25,13 +26,6 @@ import {users_payment_option} from "@prisma/client";
 
 export async function signup(req: Request, res: Response) {
   try {
-    if (!req.body) {
-      res
-        .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .json({ title: "Bad Request", message: "Request body is empty" });
-      return;
-    }
-
     const {
       apartment,
       building,
@@ -135,10 +129,7 @@ export async function login(req: Request, res: Response) {
   );
 
   if (!found_user) {
-    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
-      title: "Invalid credentials",
-      message: "Email or password is incorrect",
-    });
+    handleUnauthorizedRequest(res, "Email or password is incorrect");
     return;
   }
 
@@ -153,4 +144,24 @@ export async function login(req: Request, res: Response) {
   res
     .status(constants.HTTP_STATUS_OK)
     .json({ message: "User logged in successfully" });
+}
+
+export async function logout(req: Request, res: Response) {
+  const session_id = req.cookies.session_id;
+
+  if (!session_id) {
+    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+      title: "Bad Request",
+      message: "Session id is not provided",
+    });
+    return;
+  }
+
+  await user_session_handler.deleteSession(session_id);
+
+  res.clearCookie("session_id");
+
+  res
+    .status(constants.HTTP_STATUS_OK)
+    .json({ message: "User logged out successfully" });
 }

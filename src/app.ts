@@ -5,6 +5,8 @@ import cors from "cors";
 import cookies from "cookie-parser";
 import { configRouters } from "./config/routers.config";
 import path from "path";
+import helmet from "helmet";
+import morgan from "morgan";
 
 dotenv.config();
 
@@ -16,11 +18,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 app.use(cookies());
+app.use(helmet());
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms")
+);
 
 configRouters(app);
 
 app.listen(PORT, async (): Promise<void> => {
-  console.log("Database connected");
   console.log("SERVER IS UP ON PORT:", PORT);
 });
 

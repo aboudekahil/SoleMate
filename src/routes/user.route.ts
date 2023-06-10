@@ -5,5 +5,6 @@ const router = express.Router({ mergeParams: true });
 
 router.post("/signup", UserController.signup);
 router.post("/login", UserController.login);
+router.post("/logout", UserController.logout);
 
 export default { prefix: "user", router };

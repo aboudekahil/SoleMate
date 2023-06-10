@@ -3,49 +3,23 @@ import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { constants } from "http2";
 import {
-  Prisma,
   shoe_fit,
   shoe_images_image_type,
   shoes_condition,
+  users,
 } from "@prisma/client";
 import { MulterError } from "multer";
 import { isEnum } from "class-validator";
 import path from "path";
+import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
 
-export async function getShoes(req: Request, res: Response) {
-  const LIMIT = 20;
-  const sort_by = req.query.sort_by as SortByType;
-  const order = req.query.order as OrderType;
-  const search = req.query.search as string | undefined;
-  const page = parseInt(req.query.page as string | "0");
+export async function getShoe(req: Request, res: Response) {
+  const id = req.params.id;
 
-  if (!isEnum(sort_by, SortBy)) {
-    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid sort_by value",
-    });
-  }
-
-  if (!isEnum(order, Order)) {
-    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid order value",
-    });
-  }
-
-  const where: Prisma.shoesWhereInput = {
-    orders: { none: {} },
-  };
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search } },
-      { color: { contains: search } },
-    ];
-  }
-
-  const shoes = await prisma.shoes.findMany({
-    where,
+  const shoe = await prisma.shoes.findUnique({
+    where: {
+      shoe_id: id,
+    },
     include: {
       shoe_images: {
         select: {
@@ -54,52 +28,55 @@ export async function getShoes(req: Request, res: Response) {
         },
       },
       shoe_sizes: {
-        orderBy: {
-          shoe_size: "asc",
-        },
         select: {
           shoe_size: true,
           price: true,
           quantity: true,
         },
       },
-      users: {
+    },
+  });
+
+  if (!shoe) {
+    res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+      title: "Not found",
+      message: "Shoe not found",
+    });
+    return;
+  }
+
+  res.status(constants.HTTP_STATUS_OK).json(shoe);
+}
+
+export async function getShoes(req: Request, res: Response) {
+  const LIMIT = 30;
+
+  const shoes = await prisma.shoes.findMany({
+    where: {
+      orders: {
+        none: {},
+      },
+      verified: true,
+    },
+    include: {
+      shoe_images: {
         select: {
-          name: true,
-          family_name: true,
+          image_url: true,
+          image_type: true,
+        },
+      },
+      shoe_sizes: {
+        select: {
+          shoe_size: true,
+          price: true,
+          quantity: true,
         },
       },
     },
-    skip: page * LIMIT,
     take: LIMIT,
   });
 
-  const sortedShoes = shoes.sort((a, b) => {
-    switch (sort_by) {
-      case SortBy.SIZE:
-        const aSizes = a.shoe_sizes.map((size) => size.shoe_size);
-        const bSizes = b.shoe_sizes.map((size) => size.shoe_size);
-        return order === "asc" ? aSizes[0] - bSizes[0] : bSizes[0] - aSizes[0];
-      case SortBy.PRICE:
-        const aPrices = a.shoe_sizes.map((size) => size.price);
-        const bPrices = b.shoe_sizes.map((size) => size.price);
-        return order === "asc"
-          ? aPrices[0] - bPrices[0]
-          : bPrices[0] - aPrices[0];
-      case SortBy.NAME:
-        return order === "asc"
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
-      case SortBy.COLOR:
-        return order === "asc"
-          ? a.color.localeCompare(b.color)
-          : b.color.localeCompare(a.color);
-      default:
-        return 0;
-    }
-  });
-
-  res.status(constants.HTTP_STATUS_OK).json(sortedShoes);
+  res.status(constants.HTTP_STATUS_OK).json(shoes);
 }
 
 export function multerErrorHandlerMiddleware(upload: RequestHandler) {
@@ -128,10 +105,18 @@ export async function addShoe(req: Request, res: Response) {
   const user_session = await user_session_handler.getSession(session_id);
 
   if (!user_session) {
-    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
-      title: "Unauthorized",
-      message: "You are not logged in",
-    });
+    handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
+    return;
+  }
+
+  const user = (await prisma.users.findUnique({
+    where: {
+      user_id: user_session.user_id,
+    },
+  })) as users;
+
+  if (!user.is_verified) {
+    handleUnauthorizedRequest(res, ERROR_REASON.UNVERIFIED_ACCOUNT);
     return;
   }
 

@@ -4,25 +4,21 @@ import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { orders } from "@prisma/client";
+import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
 
 export async function placeOrder(req: Request, res: Response) {
   const { shoe_id } = req.body;
-  debugger;
-  if (!req.cookies.session_id) {
-    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
-      title: "Unauthorized request",
-      message: "User not logged in",
-    });
+  const session_id: string | undefined = req.cookies.session_id;
+
+  if (!session_id) {
+    handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
+    return;
   }
-  const { session_id }: cookies = req.cookies;
 
-  const user = await user_session_handler.getSession(session_id);
+  const user_session = await user_session_handler.getSession(session_id);
 
-  if (!user) {
-    res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({
-      title: "Unauthorized request",
-      message: "Invalid session_id cookie",
-    });
+  if (!user_session) {
+    handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
     return;
   }
   let order: orders;
@@ -31,7 +27,7 @@ export async function placeOrder(req: Request, res: Response) {
       data: {
         user: {
           connect: {
-            user_id: user.user_id,
+            user_id: user_session.user_id,
           },
         },
         shoe: {

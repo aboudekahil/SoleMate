@@ -31,4 +31,5 @@ const UserController = __importStar(require("../controllers/user.controller"));
 const router = express_1.default.Router({ mergeParams: true });
 router.post("/signup", UserController.signup);
 router.post("/login", UserController.login);
+router.post("/logout", UserController.logout);
 exports.default = { prefix: "user", router };

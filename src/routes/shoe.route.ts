@@ -17,12 +17,16 @@ router.post(
       { name: "box_front", maxCount: 1 },
       { name: "box_tag", maxCount: 1 },
       { name: "box_date", maxCount: 1 },
-      { name: "other", maxCount: 4 },
+      {
+        name: "other",
+        maxCount: parseInt(process.env.MAX_OTHER_PHOTOS || "5"),
+      },
     ])
   ),
   ShoeController.addShoe
 );
 
 router.get("/", ShoeController.getShoes);
+router.get("/:id", ShoeController.getShoe);
 
 export default { prefix: "shoe", router };

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.signup = void 0;
+exports.logout = exports.login = exports.signup = void 0;
 const userService_1 = __importDefault(require("../services/userService"));
 const InvalidError_1 = require("../errors/InvalidError");
 const session_config_1 = require("../config/session.config");
@@ -122,3 +122,19 @@ async function login(req, res) {
         .json({ message: "User logged in successfully" });
 }
 exports.login = login;
+async function logout(req, res) {
+    const session_id = req.cookies.session_id;
+    if (!session_id) {
+        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
+            title: "Bad Request",
+            message: "Session id is not provided",
+        });
+        return;
+    }
+    await session_config_1.user_session_handler.deleteSession(session_id);
+    res.clearCookie("session_id");
+    res
+        .status(http2_1.constants.HTTP_STATUS_OK)
+        .json({ message: "User logged out successfully" });
+}
+exports.logout = logout;

@@ -5,13 +5,12 @@ class UserSessionHandler {
   private sessionCache: Map<string, user_session>;
   private readonly defaultExpiration: number;
 
-  constructor(private prisma: PrismaClient) {
+  public constructor(private prisma: PrismaClient) {
     this.sessionCache = new Map();
     this.defaultExpiration = 60 * 60 * 24 * 365 * 1000; // one year in ms
   }
 
-  async createSession(user_id: string): Promise<user_session> {
-    debugger;
+  public async createSession(user_id: string): Promise<user_session> {
     const session = await this.prisma.user_session.create({
       data: {
         user_id: user_id,
@@ -24,7 +23,7 @@ class UserSessionHandler {
     return session;
   }
 
-  async getSession(sessionId: string): Promise<user_session | null> {
+  public async getSession(sessionId: string): Promise<user_session | null> {
     let session = this.sessionCache.get(sessionId);
 
     if (!session) {
@@ -49,7 +48,9 @@ class UserSessionHandler {
     return session || null;
   }
 
-  async updateSessionTimeout(sessionId: string): Promise<user_session | null> {
+  public async updateSessionTimeout(
+    sessionId: string
+  ): Promise<user_session | null> {
     const session = await this.prisma.user_session.update({
       where: { session_id: sessionId },
       data: { timeout_date: this.getSessionTimeout() },
@@ -62,9 +63,17 @@ class UserSessionHandler {
     return session;
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
+  public async deleteSession(sessionId: string): Promise<void> {
     this.sessionCache.delete(sessionId);
     await this.prisma.user_session.delete({ where: { session_id: sessionId } });
+  }
+
+  public async getUserFromSession(user_session: user_session) {
+    return this.prisma.users.findUnique({
+      where: {
+        user_id: user_session.user_id,
+      },
+    });
   }
 
   private getSessionTimeout(): Date {

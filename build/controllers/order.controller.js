@@ -7,7 +7,6 @@ const prisma_config_1 = require("../config/prisma.config");
 const library_1 = require("@prisma/client/runtime/library");
 async function placeOrder(req, res) {
     const { shoe_id } = req.body;
-    debugger;
     if (!req.cookies.session_id) {
         res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
             title: "Unauthorized request",

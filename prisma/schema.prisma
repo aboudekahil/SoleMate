@@ -15,7 +15,7 @@ model cities {
 }
 
 model feedbacks {
-  feedback_id String   @id @db.VarChar(36)
+  feedback_id String   @id @default(uuid()) @db.VarChar(36)
   content     String   @db.VarChar(255)
   users       users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
   user_id     String   @db.VarChar(36)
@@ -121,7 +121,7 @@ model whish_payments {
 model user_session {
   session_id   String   @id @default(uuid()) @db.VarChar(36)
   user         users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
-  user_id      String   @unique @db.VarChar(36)
+  user_id      String   @db.VarChar(36)
   timeout_date DateTime
 }
 

@@ -53,3 +53,9 @@ enum SortBy {
 }
 
 type SortByType = SortBy | undefined;
+
+enum ERROR_REASON {
+  NOT_LOGGED_IN = "User not logged in",
+  UNVERIFIED_ACCOUNT = "Please verify your account",
+  NOT_ADMIN = "You are not an admin",
+}
