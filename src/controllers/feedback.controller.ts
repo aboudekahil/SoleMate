@@ -4,10 +4,36 @@ import { prisma } from "../config/prisma.config";
 import { user_session_handler } from "../config/session.config";
 import {
   handleBadRequest,
+  handleForbiddenRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
 
 export async function getFeedbacks(req: Request, res: Response) {
+  const session_id: string | undefined = req.cookies.session_id;
+
+  if (!session_id) {
+    handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
+    return;
+  }
+
+  const user_session = await user_session_handler.getSession(session_id);
+
+  if (!user_session) {
+    handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
+    return;
+  }
+
+  const user = await prisma.users.findUnique({
+    where: {
+      user_id: user_session.user_id,
+    },
+  });
+
+  if (!user?.is_admin) {
+    handleForbiddenRequest(res, ERROR_REASON.NOT_ADMIN);
+    return;
+  }
+
   const feedbacks = await prisma.feedbacks.findMany({
     orderBy: {
       createdAt: "desc",

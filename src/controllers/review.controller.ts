@@ -5,6 +5,7 @@ import { user_session_handler } from "../config/session.config";
 import { users } from "@prisma/client";
 import {
   handleBadRequest,
+  handleForbiddenRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
 
@@ -113,14 +114,14 @@ export async function getReviews(req: Request, res: Response) {
     return;
   }
 
-  const user = (await prisma.users.findUnique({
+  const user = await prisma.users.findUnique({
     where: {
       user_id: user_session.user_id,
     },
-  })) as users;
+  });
 
-  if (!user.is_admin) {
-    handleUnauthorizedRequest(res, ERROR_REASON.NOT_ADMIN);
+  if (!user?.is_admin) {
+    handleForbiddenRequest(res, ERROR_REASON.NOT_ADMIN);
     return;
   }
 

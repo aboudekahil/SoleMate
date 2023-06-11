@@ -25,7 +25,7 @@ export function handleUnauthorizedRequest(
   );
 }
 
-export function handleBadRequest(res: Response, reason: string) {
+export function handleBadRequest(res: Response, reason: string | ERROR_REASON) {
   handleErrorRequest(
     res,
     constants.HTTP_STATUS_BAD_REQUEST,
@@ -34,6 +34,21 @@ export function handleBadRequest(res: Response, reason: string) {
   );
 }
 
-export function handleNotFoundRequest(res: Response, reason: string) {
+export function handleForbiddenRequest(
+  res: Response,
+  reason: string | ERROR_REASON
+) {
+  handleErrorRequest(
+    res,
+    constants.HTTP_STATUS_FORBIDDEN,
+    "Forbidden request",
+    reason
+  );
+}
+
+export function handleNotFoundRequest(
+  res: Response,
+  reason: string | ERROR_REASON
+) {
   handleErrorRequest(res, constants.HTTP_STATUS_NOT_FOUND, "Not found", reason);
 }

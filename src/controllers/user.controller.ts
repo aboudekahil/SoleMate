@@ -1,11 +1,11 @@
 import {Request, Response} from "express";
-import UserService from "../services/userService";
-import {InvalidError} from "../errors/InvalidError";
 import {user_session_handler} from "../config/session.config";
 import {constants} from "http2";
 import {isEmail, isEnum, isPhoneNumber} from "class-validator";
 import {users_payment_option} from "@prisma/client";
 import {handleBadRequest, handleUnauthorizedRequest,} from "../errors/httpErrorHandling";
+import {prisma} from "../config/prisma.config";
+import bcrypt from "bcrypt";
 
 // {
 //   "apartment": "123",
@@ -71,11 +71,46 @@ export async function signup(req: Request, res: Response) {
       return;
     }
 
-    const user_service = new UserService();
+    req.body.password = await bcrypt.hash(password, 15);
+    const found_city = await prisma.cities.findUnique({
+      where: {
+        name: city,
+      },
+    });
 
-    req.body.password = await user_service.hashPassword(req.body.password);
+    if (!found_city) {
+      handleBadRequest(res, "City is invalid");
+      return;
+    }
 
-    const created_user = await user_service.signUserUp(req.body);
+    const created_user = await prisma.users.create({
+      data: {
+        name,
+        family_name,
+        password,
+        email_address,
+        phone_number,
+        street,
+        apartment,
+        building,
+        payment_option,
+        city_id: found_city.city_id,
+        whish_payment: Whish
+          ? {
+              create: {
+                value: Whish,
+              },
+            }
+          : undefined,
+        omt_payment: OMT
+          ? {
+              create: {
+                value: OMT,
+              },
+            }
+          : undefined,
+      },
+    });
 
     const session = await user_session_handler.createSession(
       created_user.user_id
@@ -84,22 +119,15 @@ export async function signup(req: Request, res: Response) {
     res.cookie("session_id", session.session_id, {
       httpOnly: true,
       expires: session.timeout_date,
-      // secure: true,
+      secure: process.env.IS_PROD === "TRUE",
     });
 
     res
       .status(constants.HTTP_STATUS_CREATED)
       .json({ message: "User created successfully" });
   } catch (error) {
-    if (error instanceof InvalidError)
-      res
-        .status(constants.HTTP_STATUS_FORBIDDEN)
-        .json(JSON.parse(error.toString()));
-    else if (error instanceof TypeError)
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Request body is empty",
-      });
+    if (error instanceof TypeError)
+      handleBadRequest(res, "Request body is not valid");
     else
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -108,13 +136,23 @@ export async function signup(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const user_service = new UserService();
-  const found_user = await user_service.findUserByEmailAndPassword(
-    req.body.email_address,
-    req.body.password
-  );
+  const found_user = await prisma.users.findUnique({
+    where: {
+      email_address: req.body.email_address,
+    },
+  });
 
   if (!found_user) {
+    handleUnauthorizedRequest(res, "Email not found");
+    return;
+  }
+
+  const is_password_valid = await bcrypt.compare(
+    req.body.password,
+    found_user.password
+  );
+
+  if (!is_password_valid) {
     handleUnauthorizedRequest(res, "Email or password is incorrect");
     return;
   }
@@ -124,7 +162,7 @@ export async function login(req: Request, res: Response) {
   res.cookie("session_id", session.session_id, {
     httpOnly: true,
     expires: session.timeout_date,
-    // secure: true,
+    secure: process.env.IS_PROD === "TRUE",
   });
 
   res
