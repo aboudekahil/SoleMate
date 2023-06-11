@@ -3,7 +3,10 @@ import { constants } from "http2";
 import { prisma } from "../config/prisma.config";
 import { user_session_handler } from "../config/session.config";
 import { users } from "@prisma/client";
-import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
+import {
+  handleBadRequest,
+  handleUnauthorizedRequest,
+} from "../errors/httpErrorHandling";
 
 export async function sendReview(req: Request, res: Response) {
   const session_id: string | undefined = req.cookies.session_id;
@@ -46,10 +49,7 @@ export async function sendReview(req: Request, res: Response) {
   });
 
   if (!shoe) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Shoe not found",
-    });
+    handleBadRequest(res, "Shoe provided is not valid");
     return;
   }
 
@@ -61,10 +61,7 @@ export async function sendReview(req: Request, res: Response) {
   });
 
   if (!shipment) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Shoe not shipped",
-    });
+    handleBadRequest(res, "Shoe not shipped yet");
     return;
   }
 
@@ -78,10 +75,7 @@ export async function sendReview(req: Request, res: Response) {
     !(0 <= shipping_quality_rating && shipping_quality_rating <= 5) ||
     !(0 <= website_performance_rating && website_performance_rating <= 5)
   ) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Rating must be an integer between 0 and 5",
-    });
+    handleBadRequest(res, "Rating must be an integer between 0 and 5");
     return;
   }
 
@@ -131,18 +125,12 @@ export async function getReviews(req: Request, res: Response) {
   }
 
   if (!shoe_id) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Shoe id not provided",
-    });
+    handleBadRequest(res, "Shoe id not provided");
     return;
   }
 
   if (typeof shoe_id !== "string") {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Shoe id must be a string",
-    });
+    handleBadRequest(res, "Shoe id must be a string");
     return;
   }
 

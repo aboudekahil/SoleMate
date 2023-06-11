@@ -5,7 +5,7 @@ import {user_session_handler} from "../config/session.config";
 import {constants} from "http2";
 import {isEmail, isEnum, isPhoneNumber} from "class-validator";
 import {users_payment_option} from "@prisma/client";
-import {handleUnauthorizedRequest} from "../errors/httpErrorHandling";
+import {handleBadRequest, handleUnauthorizedRequest,} from "../errors/httpErrorHandling";
 
 // {
 //   "apartment": "123",
@@ -41,26 +41,17 @@ export async function signup(req: Request, res: Response) {
     }: UserCreateBody = req.body;
 
     if (!isEnum(payment_option, users_payment_option)) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Payment option is not valid",
-      });
+      handleBadRequest(res, "Payment option is not valid");
       return;
     }
 
     if (!isEmail(email_address)) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Email is not valid",
-      });
+      handleBadRequest(res, "Email is not valid");
       return;
     }
 
     if (!isPhoneNumber(phone_number, "LB")) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Phone number is not valid",
-      });
+      handleBadRequest(res, "Phone number is not valid");
       return;
     }
 
@@ -68,20 +59,15 @@ export async function signup(req: Request, res: Response) {
       (payment_option === "Whish" && !Whish) ||
       (payment_option === "OMT" && !OMT)
     ) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Payment values do not match payment option",
-      });
-
+      handleBadRequest(res, "Payment values do not match payment option");
       return;
     }
 
     if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad Request",
-        message: "Payment values must be at least 3 characters long",
-      });
-
+      handleBadRequest(
+        res,
+        "Payment values must be at least 3 characters long"
+      );
       return;
     }
 

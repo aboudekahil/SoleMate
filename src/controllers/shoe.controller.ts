@@ -11,7 +11,11 @@ import {
 import { MulterError } from "multer";
 import { isEnum } from "class-validator";
 import path from "path";
-import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
+import {
+  handleBadRequest,
+  handleNotFoundRequest,
+  handleUnauthorizedRequest,
+} from "../errors/httpErrorHandling";
 
 export async function getShoe(req: Request, res: Response) {
   const id = req.params.id;
@@ -38,10 +42,7 @@ export async function getShoe(req: Request, res: Response) {
   });
 
   if (!shoe) {
-    res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-      title: "Not found",
-      message: "Shoe not found",
-    });
+    handleNotFoundRequest(res, "Shoe not found");
     return;
   }
 
@@ -83,10 +84,7 @@ export function multerErrorHandlerMiddleware(upload: RequestHandler) {
   return (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, (err) => {
       if (err instanceof MulterError) {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-          title: "Bad request",
-          message: err.message,
-        });
+        handleBadRequest(res, err.message);
       } else if (err) {
         res
           .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -121,45 +119,30 @@ export async function addShoe(req: Request, res: Response) {
   }
 
   if (!isEnum(condition, shoes_condition)) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid condition",
-    });
+    handleBadRequest(res, "Condition is not valid");
     return;
   }
 
   if (!isEnum(fit, shoe_fit)) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid fit",
-    });
+    handleBadRequest(res, "Fit is not valid");
     return;
   }
 
   if (!name || !color || !sizes) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid input",
-    });
+    handleBadRequest(res, "Provided data is not valid");
     return;
   }
 
   const sizesJSON: ShoeSize[] = JSON.parse(sizes);
 
   if (!Array.isArray(sizesJSON)) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid sizes",
-    });
+    handleBadRequest(res, "Provided sizes data are not valid");
     return;
   }
 
   for (const size of sizesJSON) {
     if (size.price <= 0 || size.quantity <= 0 || size.size <= 0) {
-      res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-        title: "Bad request",
-        message: "Invalid sizes input",
-      });
+      handleBadRequest(res, "Provided sizes data are not valid");
       return;
     }
   }
@@ -169,10 +152,7 @@ export async function addShoe(req: Request, res: Response) {
     | undefined;
 
   if (!files) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "No files were uploaded",
-    });
+    handleBadRequest(res, "No files were uploaded");
     return;
   }
 
@@ -284,9 +264,6 @@ export async function addShoe(req: Request, res: Response) {
     });
     await res.status(constants.HTTP_STATUS_CREATED).json(shoe);
   } else {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad Request",
-      message: "Missing images",
-    });
+    handleBadRequest(res, "Missing images");
   }
 }

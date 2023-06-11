@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import { constants } from "http2";
 import { prisma } from "../config/prisma.config";
 import { user_session_handler } from "../config/session.config";
-import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
+import {
+  handleBadRequest,
+  handleUnauthorizedRequest,
+} from "../errors/httpErrorHandling";
 
 export async function getFeedbacks(req: Request, res: Response) {
   const feedbacks = await prisma.feedbacks.findMany({
@@ -42,10 +45,7 @@ export async function sendFeedback(req: Request, res: Response) {
   }
 
   if (!content || content.length < 5) {
-    res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-      title: "Bad request",
-      message: "Invalid content",
-    });
+    handleBadRequest(res, "Content must be at least 5 characters long");
     return;
   }
 

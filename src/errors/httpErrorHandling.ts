@@ -33,3 +33,7 @@ export function handleBadRequest(res: Response, reason: string) {
     reason
   );
 }
+
+export function handleNotFoundRequest(res: Response, reason: string) {
+  handleErrorRequest(res, constants.HTTP_STATUS_NOT_FOUND, "Not found", reason);
+}

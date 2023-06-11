@@ -4,7 +4,10 @@ import { user_session_handler } from "../config/session.config";
 import { prisma } from "../config/prisma.config";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { orders } from "@prisma/client";
-import { handleUnauthorizedRequest } from "../errors/httpErrorHandling";
+import {
+  handleBadRequest,
+  handleUnauthorizedRequest,
+} from "../errors/httpErrorHandling";
 
 export async function placeOrder(req: Request, res: Response) {
   const { shoe_id } = req.body;
@@ -40,10 +43,7 @@ export async function placeOrder(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-          title: "Bad request",
-          message: "Invalid shoe_id",
-        });
+        handleBadRequest(res, "Shoe provided is not valid");
       }
     } else {
       res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
