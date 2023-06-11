@@ -2,24 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.placeOrder = void 0;
 const http2_1 = require("http2");
-const session_config_1 = require("../config/session.config");
-const prisma_config_1 = require("../config/prisma.config");
+const session_config_1 = require("../configs/session.config");
+const prisma_config_1 = require("../configs/prisma.config");
 const library_1 = require("@prisma/client/runtime/library");
+const httpErrorHandling_1 = require("../errors/httpErrorHandling");
 async function placeOrder(req, res) {
     const { shoe_id } = req.body;
-    if (!req.cookies.session_id) {
-        res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
-            title: "Unauthorized request",
-            message: "User not logged in",
-        });
+    const session_id = req.cookies.session_id;
+    if (!session_id) {
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.NOT_LOGGED_IN);
+        return;
     }
-    const { session_id } = req.cookies;
-    const user = await session_config_1.user_session_handler.getSession(session_id);
-    if (!user) {
-        res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
-            title: "Unauthorized request",
-            message: "Invalid session_id cookie",
-        });
+    const user_session = await session_config_1.user_session_handler.getSession(session_id);
+    if (!user_session) {
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.NOT_LOGGED_IN);
         return;
     }
     let order;
@@ -28,7 +24,7 @@ async function placeOrder(req, res) {
             data: {
                 user: {
                     connect: {
-                        user_id: user.user_id,
+                        user_id: user_session.user_id,
                     },
                 },
                 shoe: {
@@ -42,10 +38,7 @@ async function placeOrder(req, res) {
     catch (error) {
         if (error instanceof library_1.PrismaClientKnownRequestError) {
             if (error.code === "P2025") {
-                res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                    title: "Bad request",
-                    message: "Invalid shoe_id",
-                });
+                (0, httpErrorHandling_1.handleBadRequest)(res, "Shoe provided is not valid");
             }
         }
         else {

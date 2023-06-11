@@ -4,96 +4,88 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.login = exports.signup = void 0;
-const userService_1 = __importDefault(require("../services/userService"));
-const InvalidError_1 = require("../errors/InvalidError");
-const session_config_1 = require("../config/session.config");
+const session_config_1 = require("../configs/session.config");
 const http2_1 = require("http2");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
-// {
-//   "apartment": "123",
-//     "building": "456",
-//     "city": "Tyr",
-//     "email_address": "aboudehkahil@gmail.com",
-//     "family_name": "kahil",
-//     "name": "abd el kader kahil",
-//     "password": "aboudeh2004",
-//     "payment_option": "Whish",
-//     "payment_values": {
-//   "OMT": null,
-//       "Whish": "123456789"
-// },
-//   "phone_number": "71493037",
-//     "street": "Bayak"
-// }
+const httpErrorHandling_1 = require("../errors/httpErrorHandling");
+const prisma_config_1 = require("../configs/prisma.config");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 async function signup(req, res) {
     try {
-        if (!req.body) {
-            res
-                .status(http2_1.constants.HTTP_STATUS_BAD_REQUEST)
-                .json({ title: "Bad Request", message: "Request body is empty" });
-            return;
-        }
         const { apartment, building, city, email_address, family_name, name, password, payment_option, payment_values: { OMT, Whish }, phone_number, street, } = req.body;
         if (!(0, class_validator_1.isEnum)(payment_option, client_1.users_payment_option)) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Payment option is not valid",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment option is not valid");
             return;
         }
         if (!(0, class_validator_1.isEmail)(email_address)) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Email is not valid",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Email is not valid");
             return;
         }
         if (!(0, class_validator_1.isPhoneNumber)(phone_number, "LB")) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Phone number is not valid",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Phone number is not valid");
             return;
         }
         if ((payment_option === "Whish" && !Whish) ||
             (payment_option === "OMT" && !OMT)) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Payment values do not match payment option",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values do not match payment option");
             return;
         }
         if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Payment values must be at least 3 characters long",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values must be at least 3 characters long");
             return;
         }
-        const user_service = new userService_1.default();
-        req.body.password = await user_service.hashPassword(req.body.password);
-        const created_user = await user_service.signUserUp(req.body);
+        req.body.password = await bcrypt_1.default.hash(password, 15);
+        const found_city = await prisma_config_1.prisma.cities.findUnique({
+            where: {
+                name: city,
+            },
+        });
+        if (!found_city) {
+            (0, httpErrorHandling_1.handleBadRequest)(res, "City is invalid");
+            return;
+        }
+        const created_user = await prisma_config_1.prisma.users.create({
+            data: {
+                name,
+                family_name,
+                password,
+                email_address,
+                phone_number,
+                street,
+                apartment,
+                building,
+                payment_option,
+                city_id: found_city.city_id,
+                whish_payment: Whish
+                    ? {
+                        create: {
+                            value: Whish,
+                        },
+                    }
+                    : undefined,
+                omt_payment: OMT
+                    ? {
+                        create: {
+                            value: OMT,
+                        },
+                    }
+                    : undefined,
+            },
+        });
         const session = await session_config_1.user_session_handler.createSession(created_user.user_id);
         res.cookie("session_id", session.session_id, {
             httpOnly: true,
             expires: session.timeout_date,
-            // secure: true,
+            secure: process.env.IS_PROD === "TRUE",
         });
         res
             .status(http2_1.constants.HTTP_STATUS_CREATED)
             .json({ message: "User created successfully" });
     }
     catch (error) {
-        if (error instanceof InvalidError_1.InvalidError)
-            res
-                .status(http2_1.constants.HTTP_STATUS_FORBIDDEN)
-                .json(JSON.parse(error.toString()));
-        else if (error instanceof TypeError)
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad Request",
-                message: "Request body is empty",
-            });
+        if (error instanceof TypeError)
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Request body is not valid");
         else
             res
                 .status(http2_1.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -102,20 +94,25 @@ async function signup(req, res) {
 }
 exports.signup = signup;
 async function login(req, res) {
-    const user_service = new userService_1.default();
-    const found_user = await user_service.findUserByEmailAndPassword(req.body.email_address, req.body.password);
+    const found_user = await prisma_config_1.prisma.users.findUnique({
+        where: {
+            email_address: req.body.email_address,
+        },
+    });
     if (!found_user) {
-        res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
-            title: "Invalid credentials",
-            message: "Email or password is incorrect",
-        });
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, "Email not found");
+        return;
+    }
+    const is_password_valid = await bcrypt_1.default.compare(req.body.password, found_user.password);
+    if (!is_password_valid) {
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, "Email or password is incorrect");
         return;
     }
     const session = await session_config_1.user_session_handler.createSession(found_user.user_id);
     res.cookie("session_id", session.session_id, {
         httpOnly: true,
         expires: session.timeout_date,
-        // secure: true,
+        secure: process.env.IS_PROD === "TRUE",
     });
     res
         .status(http2_1.constants.HTTP_STATUS_OK)

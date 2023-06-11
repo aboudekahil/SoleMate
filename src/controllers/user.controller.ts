@@ -1,30 +1,16 @@
-import {Request, Response} from "express";
-import {user_session_handler} from "../config/session.config";
-import {constants} from "http2";
-import {isEmail, isEnum, isPhoneNumber} from "class-validator";
-import {users_payment_option} from "@prisma/client";
-import {handleBadRequest, handleUnauthorizedRequest,} from "../errors/httpErrorHandling";
-import {prisma} from "../config/prisma.config";
+import { Request, Response } from "express";
+import { user_session_handler } from "../configs/session.config";
+import { constants } from "http2";
+import { isEmail, isEnum, isPhoneNumber } from "class-validator";
+import { users_payment_option } from "@prisma/client";
+import {
+  handleBadRequest,
+  handleUnauthorizedRequest,
+} from "../errors/httpErrorHandling";
+import { prisma } from "../configs/prisma.config";
 import bcrypt from "bcrypt";
 
-// {
-//   "apartment": "123",
-//     "building": "456",
-//     "city": "Tyr",
-//     "email_address": "aboudehkahil@gmail.com",
-//     "family_name": "kahil",
-//     "name": "abd el kader kahil",
-//     "password": "aboudeh2004",
-//     "payment_option": "Whish",
-//     "payment_values": {
-//   "OMT": null,
-//       "Whish": "123456789"
-// },
-//   "phone_number": "71493037",
-//     "street": "Bayak"
-// }
-
-export async function signup(req: Request, res: Response) {
+export async function signup(req: Request, res: Response): Promise<void> {
   try {
     const {
       apartment,
@@ -79,7 +65,8 @@ export async function signup(req: Request, res: Response) {
     });
 
     if (!found_city) {
-      handleBadRequest(res, "City is invalid");
+      //   ^?
+      handleBadRequest(res, "City is not valid");
       return;
     }
 
@@ -135,7 +122,7 @@ export async function signup(req: Request, res: Response) {
   }
 }
 
-export async function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response): Promise<void> {
   const found_user = await prisma.users.findUnique({
     where: {
       email_address: req.body.email_address,
@@ -170,7 +157,7 @@ export async function login(req: Request, res: Response) {
     .json({ message: "User logged in successfully" });
 }
 
-export async function logout(req: Request, res: Response) {
+export async function logout(req: Request, res: Response): Promise<void> {
   const session_id = req.cookies.session_id;
 
   if (!session_id) {

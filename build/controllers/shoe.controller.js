@@ -3,50 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addShoe = exports.multerErrorHandlerMiddleware = exports.getShoes = void 0;
-const session_config_1 = require("../config/session.config");
-const prisma_config_1 = require("../config/prisma.config");
+exports.addShoe = exports.multerErrorHandlerMiddleware = exports.getShoes = exports.getShoe = void 0;
+const session_config_1 = require("../configs/session.config");
+const prisma_config_1 = require("../configs/prisma.config");
 const http2_1 = require("http2");
 const client_1 = require("@prisma/client");
 const multer_1 = require("multer");
 const class_validator_1 = require("class-validator");
 const path_1 = __importDefault(require("path"));
-async function getShoes(req, res) {
-    const LIMIT = 30;
-    // const sort_by = req.query.sort_by as SortByType | undefined;
-    // const order = req.query.order as OrderType | undefined;
-    // const search = req.query.search as string | undefined;
-    // const page = parseInt(req.query.page as string | "0");
-    //
-    // if (!isEnum(sort_by, SortBy)) {
-    //   return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-    //     title: "Bad request",
-    //     message: "Invalid sort_by value",
-    //   });
-    // }
-    //
-    // if (!isEnum(order, Order)) {
-    //   return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-    //     title: "Bad request",
-    //     message: "Invalid order value",
-    //   });
-    // }
-    //
-    // const where: Prisma.shoesWhereInput = {
-    //   orders: { none: {} },
-    // };
-    //
-    // if (search) {
-    //   where.OR = [
-    //     { name: { contains: search } },
-    //     { color: { contains: search } },
-    //   ];
-    // }
-    const shoes = await prisma_config_1.prisma.shoes.findMany({
+const httpErrorHandling_1 = require("../errors/httpErrorHandling");
+async function getShoe(req, res) {
+    const id = req.params.id;
+    const shoe = await prisma_config_1.prisma.shoes.findUnique({
         where: {
-            orders: {
-                none: {},
-            },
+            shoe_id: id,
         },
         include: {
             shoe_images: {
@@ -62,38 +32,41 @@ async function getShoes(req, res) {
                     quantity: true,
                 },
             },
-            users: {
+        },
+    });
+    if (!shoe) {
+        (0, httpErrorHandling_1.handleNotFoundRequest)(res, "Shoe not found");
+        return;
+    }
+    res.status(http2_1.constants.HTTP_STATUS_OK).json(shoe);
+}
+exports.getShoe = getShoe;
+async function getShoes(req, res) {
+    const LIMIT = 30;
+    const shoes = await prisma_config_1.prisma.shoes.findMany({
+        where: {
+            orders: {
+                none: {},
+            },
+            verified: true,
+        },
+        include: {
+            shoe_images: {
                 select: {
-                    name: true,
-                    family_name: true,
+                    image_url: true,
+                    image_type: true,
+                },
+            },
+            shoe_sizes: {
+                select: {
+                    shoe_size: true,
+                    price: true,
+                    quantity: true,
                 },
             },
         },
+        take: LIMIT,
     });
-    // const sortedShoes = shoes.sort((a, b) => {
-    //   switch (sort_by) {
-    //     case SortBy.SIZE:
-    //       const aSizes = a.shoe_sizes.map((size) => size.shoe_size);
-    //       const bSizes = b.shoe_sizes.map((size) => size.shoe_size);
-    //       return order === "asc" ? aSizes[0] - bSizes[0] : bSizes[0] - aSizes[0];
-    //     case SortBy.PRICE:
-    //       const aPrices = a.shoe_sizes.map((size) => size.price);
-    //       const bPrices = b.shoe_sizes.map((size) => size.price);
-    //       return order === "asc"
-    //         ? aPrices[0] - bPrices[0]
-    //         : bPrices[0] - aPrices[0];
-    //     case SortBy.NAME:
-    //       return order === "asc"
-    //         ? a.name.localeCompare(b.name)
-    //         : b.name.localeCompare(a.name);
-    //     case SortBy.COLOR:
-    //       return order === "asc"
-    //         ? a.color.localeCompare(b.color)
-    //         : b.color.localeCompare(a.color);
-    //     default:
-    //       return 0;
-    //   }
-    // });
     res.status(http2_1.constants.HTTP_STATUS_OK).json(shoes);
 }
 exports.getShoes = getShoes;
@@ -101,10 +74,7 @@ function multerErrorHandlerMiddleware(upload) {
     return (req, res, next) => {
         upload(req, res, (err) => {
             if (err instanceof multer_1.MulterError) {
-                res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                    title: "Bad request",
-                    message: err.message,
-                });
+                (0, httpErrorHandling_1.handleBadRequest)(res, err.message);
             }
             else if (err) {
                 res
@@ -123,56 +93,44 @@ async function addShoe(req, res) {
     const { session_id } = req.cookies;
     const user_session = await session_config_1.user_session_handler.getSession(session_id);
     if (!user_session) {
-        res.status(http2_1.constants.HTTP_STATUS_UNAUTHORIZED).json({
-            title: "Unauthorized",
-            message: "You are not logged in",
-        });
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.NOT_LOGGED_IN);
+        return;
+    }
+    const user = (await prisma_config_1.prisma.users.findUnique({
+        where: {
+            user_id: user_session.user_id,
+        },
+    }));
+    if (!user.is_verified) {
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.UNVERIFIED_ACCOUNT);
         return;
     }
     if (!(0, class_validator_1.isEnum)(condition, client_1.shoes_condition)) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad request",
-            message: "Invalid condition",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Condition is not valid");
         return;
     }
     if (!(0, class_validator_1.isEnum)(fit, client_1.shoe_fit)) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad request",
-            message: "Invalid fit",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Fit is not valid");
         return;
     }
     if (!name || !color || !sizes) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad request",
-            message: "Invalid input",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Provided data is not valid");
         return;
     }
     const sizesJSON = JSON.parse(sizes);
     if (!Array.isArray(sizesJSON)) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad request",
-            message: "Invalid sizes",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Provided sizes data are not valid");
         return;
     }
     for (const size of sizesJSON) {
         if (size.price <= 0 || size.quantity <= 0 || size.size <= 0) {
-            res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-                title: "Bad request",
-                message: "Invalid sizes input",
-            });
+            (0, httpErrorHandling_1.handleBadRequest)(res, "Provided sizes data are not valid");
             return;
         }
     }
     const files = req.files;
     if (!files) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad request",
-            message: "No files were uploaded",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "No files were uploaded");
         return;
     }
     if (files.front &&
@@ -255,10 +213,7 @@ async function addShoe(req, res) {
         await res.status(http2_1.constants.HTTP_STATUS_CREATED).json(shoe);
     }
     else {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad Request",
-            message: "Missing images",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Missing images");
     }
 }
 exports.addShoe = addShoe;

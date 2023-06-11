@@ -3,14 +3,14 @@ import express, { Application } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import cookies from "cookie-parser";
-import { configRouters } from "./config/routers.config";
+import { configRouters } from "./configs/routers.config";
 import path from "path";
 import helmet from "helmet";
 import morgan from "morgan";
 
 dotenv.config();
 
-const app: Application = express();
+export const app: Application = express();
 
 const PORT: number = 3001;
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { user_session_handler } from "../config/session.config";
-import { prisma } from "../config/prisma.config";
+import { user_session_handler } from "../configs/session.config";
+import { prisma } from "../configs/prisma.config";
 import { constants } from "http2";
 import {
   shoe_fit,

@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * This file is used for configuring all the endpoints in the project, as well
+ * as separating the post requests to an /api/ endpoint.
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -26,25 +30,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const ShoeController = __importStar(require("../controllers/shoe.controller"));
-const multer_config_1 = require("../configs/multer.config");
-const router = express_1.default.Router({ mergeParams: true });
-router.post("/", ShoeController.multerErrorHandlerMiddleware(multer_config_1.upload.fields([
-    { name: "front", maxCount: 1 },
-    { name: "back", maxCount: 1 },
-    { name: "sides1", maxCount: 1 },
-    { name: "sides2", maxCount: 1 },
-    { name: "tag", maxCount: 1 },
-    { name: "insole", maxCount: 1 },
-    { name: "box_front", maxCount: 1 },
-    { name: "box_tag", maxCount: 1 },
-    { name: "box_date", maxCount: 1 },
-    {
-        name: "other",
-        maxCount: parseInt(process.env.MAX_OTHER_PHOTOS || "5"),
-    },
-])), ShoeController.addShoe);
-router.get("/", ShoeController.getShoes);
-router.get("/:id", ShoeController.getShoe);
-exports.default = { prefix: "shoe", router };
+exports.configRouters = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const configRouters = (app) => {
+    const basePath = path_1.default.join(process.cwd(), "build", "routes");
+    const routesDir = fs_1.default.readdirSync(basePath);
+    for (const routeFile of routesDir) {
+        Promise.resolve(`${path_1.default.join(basePath, routeFile)}`).then(s => __importStar(require(s))).then((route) => {
+            app.use(`/api/v1/${route.default.prefix}`, route.default.router);
+        });
+    }
+};
+exports.configRouters = configRouters;

@@ -1,6 +1,6 @@
 import express from "express";
 import * as ShoeController from "../controllers/shoe.controller";
-import { upload } from "../config/multer.config";
+import { upload } from "../configs/multer.config";
 
 const router = express.Router({ mergeParams: true });
 

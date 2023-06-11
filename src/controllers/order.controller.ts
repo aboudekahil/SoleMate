@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { constants } from "http2";
-import { user_session_handler } from "../config/session.config";
-import { prisma } from "../config/prisma.config";
+import { user_session_handler } from "../configs/session.config";
+import { prisma } from "../configs/prisma.config";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { orders } from "@prisma/client";
 import {

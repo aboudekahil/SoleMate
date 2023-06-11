@@ -1,6 +1,6 @@
 import multer from "multer";
 import path from "path";
-// File upload config
+// File upload configs
 // ----------------------------------------------------------------------------
 
 const storage = multer.diskStorage({
