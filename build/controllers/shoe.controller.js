@@ -12,6 +12,7 @@ const multer_1 = require("multer");
 const class_validator_1 = require("class-validator");
 const path_1 = __importDefault(require("path"));
 const httpErrorHandling_1 = require("../errors/httpErrorHandling");
+const schema_1 = require("../schemas/schema");
 async function getShoe(req, res) {
     const id = req.params.id;
     const shoe = await prisma_config_1.prisma.shoes.findUnique({
@@ -117,16 +118,10 @@ async function addShoe(req, res) {
         (0, httpErrorHandling_1.handleBadRequest)(res, "Provided data is not valid");
         return;
     }
-    const sizesJSON = JSON.parse(sizes);
-    if (!Array.isArray(sizesJSON)) {
+    const sizesJSON = schema_1.shoe_sizes_schema.safeParse(sizes);
+    if (!sizesJSON.success) {
         (0, httpErrorHandling_1.handleBadRequest)(res, "Provided sizes data are not valid");
         return;
-    }
-    for (const size of sizesJSON) {
-        if (size.price <= 0 || size.quantity <= 0 || size.size <= 0) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Provided sizes data are not valid");
-            return;
-        }
     }
     const files = req.files;
     if (!files) {
@@ -194,8 +189,8 @@ async function addShoe(req, res) {
                 color,
                 fit,
                 shoe_sizes: {
-                    create: sizesJSON.map((size) => ({
-                        shoe_size: size.size,
+                    create: sizesJSON.data.map((size) => ({
+                        shoe_size: size.shoe_size,
                         price: size.price,
                         quantity: size.quantity,
                     })),

@@ -7,6 +7,7 @@ import {
   handleForbiddenRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
+import { SendFeedBackBody } from "../schemas/feedback.schema";
 
 export async function getFeedbacks(req: Request, res: Response) {
   const session_id: string | undefined = req.cookies.session_id;
@@ -58,8 +59,11 @@ export async function getFeedbacks(req: Request, res: Response) {
   });
 }
 
-export async function sendFeedback(req: Request, res: Response) {
-  const { content }: { content: string } = req.body;
+export async function sendFeedback(
+  req: Request<any, any, SendFeedBackBody>,
+  res: Response
+) {
+  const { content } = req.body;
 
   const { session_id }: cookies = req.cookies;
 

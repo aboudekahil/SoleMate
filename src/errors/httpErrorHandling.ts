@@ -1,23 +1,35 @@
 import { constants } from "http2";
 import { Response } from "express";
+import { z } from "zod";
+
+const ErrorSchema = z
+  .array(z.object({ field: z.string(), message: z.string() }))
+  .nonempty();
+
+export type ErrorType = z.infer<typeof ErrorSchema>;
+
+type ErrorReason = string | ERROR_REASON | ErrorType;
 
 function handleErrorRequest(
   res: Response,
   code: number,
   title: string,
-  reason: ERROR_REASON | string
+  reason: ErrorReason
 ) {
-  res.status(code).json({
+  if (typeof reason === "string") {
+    return res.status(code).json({
+      title,
+      error: reason,
+    });
+  }
+  return res.status(code).json({
     title,
-    message: reason,
+    error: ErrorSchema.parse(reason),
   });
 }
 
-export function handleUnauthorizedRequest(
-  res: Response,
-  reason: string | ERROR_REASON
-) {
-  handleErrorRequest(
+export function handleUnauthorizedRequest(res: Response, reason: ErrorReason) {
+  return handleErrorRequest(
     res,
     constants.HTTP_STATUS_UNAUTHORIZED,
     "Unauthorized request",
@@ -25,8 +37,8 @@ export function handleUnauthorizedRequest(
   );
 }
 
-export function handleBadRequest(res: Response, reason: string | ERROR_REASON) {
-  handleErrorRequest(
+export function handleBadRequest(res: Response, reason: ErrorReason) {
+  return handleErrorRequest(
     res,
     constants.HTTP_STATUS_BAD_REQUEST,
     "Bad request",
@@ -34,11 +46,8 @@ export function handleBadRequest(res: Response, reason: string | ERROR_REASON) {
   );
 }
 
-export function handleForbiddenRequest(
-  res: Response,
-  reason: string | ERROR_REASON
-) {
-  handleErrorRequest(
+export function handleForbiddenRequest(res: Response, reason: ErrorReason) {
+  return handleErrorRequest(
     res,
     constants.HTTP_STATUS_FORBIDDEN,
     "Forbidden request",
@@ -46,9 +55,11 @@ export function handleForbiddenRequest(
   );
 }
 
-export function handleNotFoundRequest(
-  res: Response,
-  reason: string | ERROR_REASON
-) {
-  handleErrorRequest(res, constants.HTTP_STATUS_NOT_FOUND, "Not found", reason);
+export function handleNotFoundRequest(res: Response, reason: ErrorReason) {
+  return handleErrorRequest(
+    res,
+    constants.HTTP_STATUS_NOT_FOUND,
+    "Not found",
+    reason
+  );
 }

@@ -8,8 +8,12 @@ import {
   handleBadRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
+import { PlaceOrderBody } from "../schemas/order.schema";
 
-export async function placeOrder(req: Request, res: Response) {
+export async function placeOrder(
+  req: Request<any, any, PlaceOrderBody>,
+  res: Response
+) {
   const { shoe_id } = req.body;
   const session_id: string | undefined = req.cookies.session_id;
 

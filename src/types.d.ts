@@ -15,27 +15,8 @@ type UserCreateBody = {
   street: string;
 };
 
-type ErrorBundle = {
-  title: string;
-  message: string;
-};
-
 type cookies = {
   session_id: string;
-};
-
-type ShoeSize = {
-  size: number;
-  price: number;
-  quantity: number;
-};
-
-type ShoeCreateBody = {
-  name: string;
-  condition: shoes_condition;
-  color: string;
-  sizes: string;
-  fit: shoe_fit;
 };
 
 enum Order {
@@ -43,16 +24,12 @@ enum Order {
   DESC = "desc",
 }
 
-type OrderType = Order | undefined;
-
 enum SortBy {
   PRICE = "price",
   SIZE = "size",
   NAME = "name",
   COLOR = "color",
 }
-
-type SortByType = SortBy | undefined;
 
 enum ERROR_REASON {
   NOT_LOGGED_IN = "User not logged in",

@@ -7,90 +7,67 @@ exports.logout = exports.login = exports.signup = void 0;
 const session_config_1 = require("../configs/session.config");
 const http2_1 = require("http2");
 const class_validator_1 = require("class-validator");
-const client_1 = require("@prisma/client");
 const httpErrorHandling_1 = require("../errors/httpErrorHandling");
 const prisma_config_1 = require("../configs/prisma.config");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 async function signup(req, res) {
-    try {
-        const { apartment, building, city, email_address, family_name, name, password, payment_option, payment_values: { OMT, Whish }, phone_number, street, } = req.body;
-        if (!(0, class_validator_1.isEnum)(payment_option, client_1.users_payment_option)) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment option is not valid");
-            return;
-        }
-        if (!(0, class_validator_1.isEmail)(email_address)) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Email is not valid");
-            return;
-        }
-        if (!(0, class_validator_1.isPhoneNumber)(phone_number, "LB")) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Phone number is not valid");
-            return;
-        }
-        if ((payment_option === "Whish" && !Whish) ||
-            (payment_option === "OMT" && !OMT)) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values do not match payment option");
-            return;
-        }
-        if (!((Whish && Whish.length >= 3) || (OMT && OMT.length >= 3))) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values must be at least 3 characters long");
-            return;
-        }
-        req.body.password = await bcrypt_1.default.hash(password, 15);
-        const found_city = await prisma_config_1.prisma.cities.findUnique({
-            where: {
-                name: city,
-            },
-        });
-        if (!found_city) {
-            (0, httpErrorHandling_1.handleBadRequest)(res, "City is invalid");
-            return;
-        }
-        const created_user = await prisma_config_1.prisma.users.create({
-            data: {
-                name,
-                family_name,
-                password,
-                email_address,
-                phone_number,
-                street,
-                apartment,
-                building,
-                payment_option,
-                city_id: found_city.city_id,
-                whish_payment: Whish
-                    ? {
-                        create: {
-                            value: Whish,
-                        },
-                    }
-                    : undefined,
-                omt_payment: OMT
-                    ? {
-                        create: {
-                            value: OMT,
-                        },
-                    }
-                    : undefined,
-            },
-        });
-        const session = await session_config_1.user_session_handler.createSession(created_user.user_id);
-        res.cookie("session_id", session.session_id, {
-            httpOnly: true,
-            expires: session.timeout_date,
-            secure: process.env.IS_PROD === "TRUE",
-        });
-        res
-            .status(http2_1.constants.HTTP_STATUS_CREATED)
-            .json({ message: "User created successfully" });
+    const { apartment, building, city, email_address, family_name, name, password, payment_option, payment_values: { OMT, Whish }, phone_number, street, } = req.body;
+    if (!(0, class_validator_1.isPhoneNumber)(phone_number, "LB")) {
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Phone number is not valid");
+        return;
     }
-    catch (error) {
-        if (error instanceof TypeError)
-            (0, httpErrorHandling_1.handleBadRequest)(res, "Request body is not valid");
-        else
-            res
-                .status(http2_1.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-                .json({ message: "Internal server error" });
+    if ((payment_option === "Whish" && !Whish) ||
+        (payment_option === "OMT" && !OMT)) {
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values do not match payment option");
+        return;
     }
+    req.body.password = await bcrypt_1.default.hash(password, 15);
+    const found_city = await prisma_config_1.prisma.cities.findUnique({
+        where: {
+            name: city,
+        },
+    });
+    if (!found_city) {
+        (0, httpErrorHandling_1.handleBadRequest)(res, "City is not valid");
+        return;
+    }
+    const created_user = await prisma_config_1.prisma.users.create({
+        data: {
+            name,
+            family_name,
+            password,
+            email_address,
+            phone_number,
+            street,
+            apartment,
+            building,
+            payment_option,
+            city_id: found_city.city_id,
+            whish_payment: Whish
+                ? {
+                    create: {
+                        value: Whish,
+                    },
+                }
+                : undefined,
+            omt_payment: OMT
+                ? {
+                    create: {
+                        value: OMT,
+                    },
+                }
+                : undefined,
+        },
+    });
+    const session = await session_config_1.user_session_handler.createSession(created_user.user_id);
+    res.cookie("session_id", session.session_id, {
+        httpOnly: true,
+        expires: session.timeout_date,
+        secure: process.env.IS_PROD === "TRUE",
+    });
+    res
+        .status(http2_1.constants.HTTP_STATUS_CREATED)
+        .json({ message: "User created successfully" });
 }
 exports.signup = signup;
 async function login(req, res) {

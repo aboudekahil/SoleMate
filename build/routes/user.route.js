@@ -28,8 +28,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const UserController = __importStar(require("../controllers/user.controller"));
+const validate_middleware_1 = require("../middlewares/validate.middleware");
+const schema_1 = require("../schemas/schema");
 const router = express_1.default.Router({ mergeParams: true });
-router.post("/signup", UserController.signup);
-router.post("/login", UserController.login);
+router.post("/signup", (0, validate_middleware_1.makePostEndpoint)(schema_1.user_signup_schema, UserController.signup));
+router.post("/login", (0, validate_middleware_1.makePostEndpoint)(schema_1.user_login_schema, UserController.login));
 router.post("/logout", UserController.logout);
 exports.default = { prefix: "user", router };

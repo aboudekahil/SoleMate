@@ -1,12 +1,15 @@
 import express from "express";
 import * as ShoeController from "../controllers/shoe.controller";
 import { upload } from "../configs/multer.config";
+import { multerFileChecker } from "../middlewares/files.middleware";
+import { makePostEndpoint } from "../middlewares/validate.middleware";
+import { shoe_create_schema } from "../schemas/shoe.schema";
 
 const router = express.Router({ mergeParams: true });
 
 router.post(
   "/",
-  ShoeController.multerErrorHandlerMiddleware(
+  multerFileChecker(
     upload.fields([
       { name: "front", maxCount: 1 },
       { name: "back", maxCount: 1 },
@@ -23,7 +26,7 @@ router.post(
       },
     ])
   ),
-  ShoeController.addShoe
+  makePostEndpoint(shoe_create_schema, ShoeController.addShoe)
 );
 
 router.get("/", ShoeController.getShoes);

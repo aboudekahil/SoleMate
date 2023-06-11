@@ -8,8 +8,12 @@ import {
   handleForbiddenRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
+import { CreateReviewBody } from "../schemas/review.schema";
 
-export async function sendReview(req: Request, res: Response) {
+export async function sendReview(
+  req: Request<any, any, CreateReviewBody>,
+  res: Response
+) {
   const session_id: string | undefined = req.cookies.session_id;
 
   if (!session_id) {
@@ -66,21 +70,7 @@ export async function sendReview(req: Request, res: Response) {
     return;
   }
 
-  if (
-    !Number.isInteger(customer_service_rating) ||
-    !Number.isInteger(shipping_time_rating) ||
-    !Number.isInteger(shipping_quality_rating) ||
-    !Number.isInteger(website_performance_rating) ||
-    !(0 <= customer_service_rating && customer_service_rating <= 5) ||
-    !(0 <= shipping_time_rating && shipping_time_rating <= 5) ||
-    !(0 <= shipping_quality_rating && shipping_quality_rating <= 5) ||
-    !(0 <= website_performance_rating && website_performance_rating <= 5)
-  ) {
-    handleBadRequest(res, "Rating must be an integer between 0 and 5");
-    return;
-  }
-
-  const review = await prisma.reviews.create({
+  await prisma.reviews.create({
     data: {
       customer_service_rating: customer_service_rating,
       shipping_time_rating: shipping_time_rating,
