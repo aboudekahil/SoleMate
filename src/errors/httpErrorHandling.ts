@@ -2,13 +2,14 @@ import { constants } from "http2";
 import { Response } from "express";
 import { z } from "zod";
 
-const ErrorSchema = z
+const error_schema = z
   .array(z.object({ field: z.string(), message: z.string() }))
   .nonempty();
 
-export type ErrorType = z.infer<typeof ErrorSchema>;
+export type ErrorArrayType = z.infer<typeof error_schema>;
+export type ErrorType = z.infer<typeof error_schema.element>;
 
-type ErrorReason = string | ERROR_REASON | ErrorType;
+type ErrorReason = string | ERROR_REASON | ErrorArrayType;
 
 function handleErrorRequest(
   res: Response,
@@ -19,12 +20,12 @@ function handleErrorRequest(
   if (typeof reason === "string") {
     return res.status(code).json({
       title,
-      error: reason,
+      errors: reason,
     });
   }
   return res.status(code).json({
     title,
-    error: ErrorSchema.parse(reason),
+    errors: error_schema.parse(reason),
   });
 }
 

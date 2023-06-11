@@ -3,16 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addShoe = exports.multerErrorHandlerMiddleware = exports.getShoes = exports.getShoe = void 0;
+exports.addShoe = exports.getShoes = exports.getShoe = void 0;
 const session_config_1 = require("../configs/session.config");
 const prisma_config_1 = require("../configs/prisma.config");
 const http2_1 = require("http2");
 const client_1 = require("@prisma/client");
-const multer_1 = require("multer");
-const class_validator_1 = require("class-validator");
 const path_1 = __importDefault(require("path"));
 const httpErrorHandling_1 = require("../errors/httpErrorHandling");
-const schema_1 = require("../schemas/schema");
 async function getShoe(req, res) {
     const id = req.params.id;
     const shoe = await prisma_config_1.prisma.shoes.findUnique({
@@ -71,24 +68,6 @@ async function getShoes(req, res) {
     res.status(http2_1.constants.HTTP_STATUS_OK).json(shoes);
 }
 exports.getShoes = getShoes;
-function multerErrorHandlerMiddleware(upload) {
-    return (req, res, next) => {
-        upload(req, res, (err) => {
-            if (err instanceof multer_1.MulterError) {
-                (0, httpErrorHandling_1.handleBadRequest)(res, err.message);
-            }
-            else if (err) {
-                res
-                    .status(http2_1.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-                    .send(err + "Upload failed due to unknown error");
-            }
-            else {
-                next();
-            }
-        });
-    };
-}
-exports.multerErrorHandlerMiddleware = multerErrorHandlerMiddleware;
 async function addShoe(req, res) {
     let { name, condition, color, sizes, fit } = req.body;
     const { session_id } = req.cookies;
@@ -104,23 +83,6 @@ async function addShoe(req, res) {
     }));
     if (!user.is_verified) {
         (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.UNVERIFIED_ACCOUNT);
-        return;
-    }
-    if (!(0, class_validator_1.isEnum)(condition, client_1.shoes_condition)) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Condition is not valid");
-        return;
-    }
-    if (!(0, class_validator_1.isEnum)(fit, client_1.shoe_fit)) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Fit is not valid");
-        return;
-    }
-    if (!name || !color || !sizes) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Provided data is not valid");
-        return;
-    }
-    const sizesJSON = schema_1.shoe_sizes_schema.safeParse(sizes);
-    if (!sizesJSON.success) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Provided sizes data are not valid");
         return;
     }
     const files = req.files;
@@ -189,7 +151,7 @@ async function addShoe(req, res) {
                 color,
                 fit,
                 shoe_sizes: {
-                    create: sizesJSON.data.map((size) => ({
+                    create: sizes.map((size) => ({
                         shoe_size: size.shoe_size,
                         price: size.price,
                         quantity: size.quantity,

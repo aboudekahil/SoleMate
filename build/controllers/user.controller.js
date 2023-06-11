@@ -10,6 +10,7 @@ const class_validator_1 = require("class-validator");
 const httpErrorHandling_1 = require("../errors/httpErrorHandling");
 const prisma_config_1 = require("../configs/prisma.config");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const library_1 = require("@prisma/client/runtime/library");
 async function signup(req, res) {
     const { apartment, building, city, email_address, family_name, name, password, payment_option, payment_values: { OMT, Whish }, phone_number, street, } = req.body;
     if (!(0, class_validator_1.isPhoneNumber)(phone_number, "LB")) {
@@ -21,7 +22,7 @@ async function signup(req, res) {
         (0, httpErrorHandling_1.handleBadRequest)(res, "Payment values do not match payment option");
         return;
     }
-    req.body.password = await bcrypt_1.default.hash(password, 15);
+    const hashed_password = await bcrypt_1.default.hash(password, 15);
     const found_city = await prisma_config_1.prisma.cities.findUnique({
         where: {
             name: city,
@@ -31,43 +32,51 @@ async function signup(req, res) {
         (0, httpErrorHandling_1.handleBadRequest)(res, "City is not valid");
         return;
     }
-    const created_user = await prisma_config_1.prisma.users.create({
-        data: {
-            name,
-            family_name,
-            password,
-            email_address,
-            phone_number,
-            street,
-            apartment,
-            building,
-            payment_option,
-            city_id: found_city.city_id,
-            whish_payment: Whish
-                ? {
-                    create: {
-                        value: Whish,
-                    },
-                }
-                : undefined,
-            omt_payment: OMT
-                ? {
-                    create: {
-                        value: OMT,
-                    },
-                }
-                : undefined,
-        },
-    });
-    const session = await session_config_1.user_session_handler.createSession(created_user.user_id);
-    res.cookie("session_id", session.session_id, {
-        httpOnly: true,
-        expires: session.timeout_date,
-        secure: process.env.IS_PROD === "TRUE",
-    });
-    res
-        .status(http2_1.constants.HTTP_STATUS_CREATED)
-        .json({ message: "User created successfully" });
+    try {
+        const created_user = await prisma_config_1.prisma.users.create({
+            data: {
+                name,
+                family_name,
+                password: hashed_password,
+                email_address,
+                phone_number,
+                street,
+                apartment,
+                building,
+                payment_option,
+                city_id: found_city.city_id,
+                whish_payment: Whish
+                    ? {
+                        create: {
+                            value: Whish,
+                        },
+                    }
+                    : undefined,
+                omt_payment: OMT
+                    ? {
+                        create: {
+                            value: OMT,
+                        },
+                    }
+                    : undefined,
+            },
+        });
+        const session = await session_config_1.user_session_handler.createSession(created_user.user_id);
+        res.cookie("session_id", session.session_id, {
+            httpOnly: true,
+            expires: session.timeout_date,
+            secure: process.env.IS_PROD === "TRUE",
+        });
+        res
+            .status(http2_1.constants.HTTP_STATUS_CREATED)
+            .json({ message: "User created successfully" });
+    }
+    catch (e) {
+        if (e instanceof library_1.PrismaClientKnownRequestError) {
+            if (e.code === "P2002")
+                (0, httpErrorHandling_1.handleBadRequest)(res, "Account already exists");
+        }
+    }
 }
 exports.signup = signup;
 async function login(req, res) {
@@ -82,7 +91,7 @@ async function login(req, res) {
     }
     const is_password_valid = await bcrypt_1.default.compare(req.body.password, found_user.password);
     if (!is_password_valid) {
-        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, "Email or password is incorrect");
+        (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, "Password is incorrect");
         return;
     }
     const session = await session_config_1.user_session_handler.createSession(found_user.user_id);
@@ -99,10 +108,7 @@ exports.login = login;
 async function logout(req, res) {
     const session_id = req.cookies.session_id;
     if (!session_id) {
-        res.status(http2_1.constants.HTTP_STATUS_BAD_REQUEST).json({
-            title: "Bad Request",
-            message: "Session id is not provided",
-        });
+        (0, httpErrorHandling_1.handleBadRequest)(res, "Session id is not provided");
         return;
     }
     await session_config_1.user_session_handler.deleteSession(session_id);

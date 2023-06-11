@@ -45,18 +45,7 @@ async function sendReview(req, res) {
         (0, httpErrorHandling_1.handleBadRequest)(res, "Shoe not shipped yet");
         return;
     }
-    if (!Number.isInteger(customer_service_rating) ||
-        !Number.isInteger(shipping_time_rating) ||
-        !Number.isInteger(shipping_quality_rating) ||
-        !Number.isInteger(website_performance_rating) ||
-        !(0 <= customer_service_rating && customer_service_rating <= 5) ||
-        !(0 <= shipping_time_rating && shipping_time_rating <= 5) ||
-        !(0 <= shipping_quality_rating && shipping_quality_rating <= 5) ||
-        !(0 <= website_performance_rating && website_performance_rating <= 5)) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Rating must be an integer between 0 and 5");
-        return;
-    }
-    const review = await prisma_config_1.prisma.reviews.create({
+    await prisma_config_1.prisma.reviews.create({
         data: {
             customer_service_rating: customer_service_rating,
             shipping_time_rating: shipping_time_rating,

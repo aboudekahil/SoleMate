@@ -56,10 +56,6 @@ async function sendFeedback(req, res) {
         (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.NOT_LOGGED_IN);
         return;
     }
-    if (!content || content.length < 5) {
-        (0, httpErrorHandling_1.handleBadRequest)(res, "Content must be at least 5 characters long");
-        return;
-    }
     await prisma_config_1.prisma.feedbacks.create({
         data: {
             content,

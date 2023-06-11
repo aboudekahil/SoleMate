@@ -28,7 +28,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const ReviewController = __importStar(require("../controllers/review.controller"));
+const validate_middleware_1 = require("../middlewares/validate.middleware");
+const review_schema_1 = require("../schemas/review.schema");
 const router = express_1.default.Router({ mergeParams: true });
-router.post("/", ReviewController.sendReview);
+router.post("/", (0, validate_middleware_1.makePostEndpoint)(review_schema_1.review_create_schema, ReviewController.sendReview));
 router.get("/", ReviewController.getReviews);
 exports.default = { prefix: "order", router };

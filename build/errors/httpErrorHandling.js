@@ -3,19 +3,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleNotFoundRequest = exports.handleForbiddenRequest = exports.handleBadRequest = exports.handleUnauthorizedRequest = void 0;
 const http2_1 = require("http2");
 const zod_1 = require("zod");
-const ErrorSchema = zod_1.z
+const error_schema = zod_1.z
     .array(zod_1.z.object({ field: zod_1.z.string(), message: zod_1.z.string() }))
     .nonempty();
 function handleErrorRequest(res, code, title, reason) {
     if (typeof reason === "string") {
         return res.status(code).json({
             title,
-            error: reason,
+            errors: reason,
         });
     }
     return res.status(code).json({
         title,
-        error: ErrorSchema.parse(reason),
+        errors: error_schema.parse(reason),
     });
 }
 function handleUnauthorizedRequest(res, reason) {

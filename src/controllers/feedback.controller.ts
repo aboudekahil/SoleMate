@@ -3,7 +3,6 @@ import { constants } from "http2";
 import { prisma } from "../configs/prisma.config";
 import { user_session_handler } from "../configs/session.config";
 import {
-  handleBadRequest,
   handleForbiddenRequest,
   handleUnauthorizedRequest,
 } from "../errors/httpErrorHandling";
@@ -71,11 +70,6 @@ export async function sendFeedback(
 
   if (!user) {
     handleUnauthorizedRequest(res, ERROR_REASON.NOT_LOGGED_IN);
-    return;
-  }
-
-  if (!content || content.length < 5) {
-    handleBadRequest(res, "Content must be at least 5 characters long");
     return;
   }
 

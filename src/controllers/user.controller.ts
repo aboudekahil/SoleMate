@@ -9,6 +9,7 @@ import {
 import { prisma } from "../configs/prisma.config";
 import bcrypt from "bcrypt";
 import { UserLoginBody, UserSignupBody } from "../schemas/user.schema";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export async function signup(
   req: Request<any, any, UserSignupBody>,
@@ -26,7 +27,7 @@ export async function signup(
     payment_values: { OMT, Whish },
     phone_number,
     street,
-  }: UserCreateBody = req.body;
+  } = req.body;
 
   if (!isPhoneNumber(phone_number, "LB")) {
     handleBadRequest(res, "Phone number is not valid");
@@ -41,7 +42,7 @@ export async function signup(
     return;
   }
 
-  req.body.password = await bcrypt.hash(password, 15);
+  const hashed_password = await bcrypt.hash(password, 15);
   const found_city = await prisma.cities.findUnique({
     where: {
       name: city,
@@ -53,48 +54,54 @@ export async function signup(
     return;
   }
 
-  const created_user = await prisma.users.create({
-    data: {
-      name,
-      family_name,
-      password,
-      email_address,
-      phone_number,
-      street,
-      apartment,
-      building,
-      payment_option,
-      city_id: found_city.city_id,
-      whish_payment: Whish
-        ? {
-            create: {
-              value: Whish,
-            },
-          }
-        : undefined,
-      omt_payment: OMT
-        ? {
-            create: {
-              value: OMT,
-            },
-          }
-        : undefined,
-    },
-  });
+  try {
+    const created_user = await prisma.users.create({
+      data: {
+        name,
+        family_name,
+        password: hashed_password,
+        email_address,
+        phone_number,
+        street,
+        apartment,
+        building,
+        payment_option,
+        city_id: found_city.city_id,
+        whish_payment: Whish
+          ? {
+              create: {
+                value: Whish,
+              },
+            }
+          : undefined,
+        omt_payment: OMT
+          ? {
+              create: {
+                value: OMT,
+              },
+            }
+          : undefined,
+      },
+    });
 
-  const session = await user_session_handler.createSession(
-    created_user.user_id
-  );
+    const session = await user_session_handler.createSession(
+      created_user.user_id
+    );
 
-  res.cookie("session_id", session.session_id, {
-    httpOnly: true,
-    expires: session.timeout_date,
-    secure: process.env.IS_PROD === "TRUE",
-  });
+    res.cookie("session_id", session.session_id, {
+      httpOnly: true,
+      expires: session.timeout_date,
+      secure: process.env.IS_PROD === "TRUE",
+    });
 
-  res
-    .status(constants.HTTP_STATUS_CREATED)
-    .json({ message: "User created successfully" });
+    res
+      .status(constants.HTTP_STATUS_CREATED)
+      .json({ message: "User created successfully" });
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError) {
+      if (e.code === "P2002") handleBadRequest(res, "Account already exists");
+    }
+  }
 }
 
 export async function login(
@@ -118,7 +125,7 @@ export async function login(
   );
 
   if (!is_password_valid) {
-    handleUnauthorizedRequest(res, "Email or password is incorrect");
+    handleUnauthorizedRequest(res, "Password is incorrect");
     return;
   }
 

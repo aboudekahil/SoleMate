@@ -29,8 +29,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const ShoeController = __importStar(require("../controllers/shoe.controller"));
 const multer_config_1 = require("../configs/multer.config");
+const files_middleware_1 = require("../middlewares/files.middleware");
+const validate_middleware_1 = require("../middlewares/validate.middleware");
+const shoe_schema_1 = require("../schemas/shoe.schema");
 const router = express_1.default.Router({ mergeParams: true });
-router.post("/", ShoeController.multerErrorHandlerMiddleware(multer_config_1.upload.fields([
+router.post("/", (0, files_middleware_1.multerFileChecker)(multer_config_1.upload.fields([
     { name: "front", maxCount: 1 },
     { name: "back", maxCount: 1 },
     { name: "sides1", maxCount: 1 },
@@ -44,7 +47,7 @@ router.post("/", ShoeController.multerErrorHandlerMiddleware(multer_config_1.upl
         name: "other",
         maxCount: parseInt(process.env.MAX_OTHER_PHOTOS || "5"),
     },
-])), ShoeController.addShoe);
+])), (0, validate_middleware_1.makePostEndpoint)(shoe_schema_1.shoe_create_schema, ShoeController.addShoe));
 router.get("/", ShoeController.getShoes);
 router.get("/:id", ShoeController.getShoe);
 exports.default = { prefix: "shoe", router };

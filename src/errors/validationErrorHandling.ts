@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
-import { ErrorType } from "./httpErrorHandling";
+import { ErrorArrayType } from "./httpErrorHandling";
 
-export function parseErrorMessages(errorMessages: ZodError): ErrorType {
+export function parseErrorMessages(errorMessages: ZodError): ErrorArrayType {
   const errors = [];
 
   for (const error of errorMessages.errors) {
@@ -21,5 +21,5 @@ export function parseErrorMessages(errorMessages: ZodError): ErrorType {
     errors.push({ field, message });
   }
 
-  return errors as ErrorType;
+  return errors as ErrorArrayType;
 }
