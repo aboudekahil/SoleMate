@@ -8,6 +8,10 @@ export function makePostEndpoint<TBody>(
   callback: (req: Request<any, any, TBody>, res: Response) => Promise<void>
 ) {
   return async (req: Request, res: Response) => {
+    if ("sizes" in req.body) {
+      req.body.sizes = JSON.parse(req.body.sizes);
+    }
+
     const result = await schema.safeParseAsync(req.body);
 
     if (!result.success) {

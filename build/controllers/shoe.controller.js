@@ -41,13 +41,39 @@ async function getShoe(req, res) {
 exports.getShoe = getShoe;
 async function getShoes(req, res) {
     const LIMIT = 30;
-    const shoes = await prisma_config_1.prisma.shoes.findMany({
-        where: {
-            orders: {
-                none: {},
-            },
-            verified: true,
+    const { page: rawPage = "1", sortBy, name, condition, color } = req.query;
+    debugger;
+    const parsedPage = parseInt(rawPage, 10);
+    if (isNaN(parsedPage) || parsedPage < 1) {
+        return res
+            .status(http2_1.constants.HTTP_STATUS_BAD_REQUEST)
+            .json({ error: "Invalid page parameter" });
+    }
+    const offset = (parsedPage - 1) * LIMIT;
+    const orderBy = {};
+    if (sortBy) {
+        orderBy[String(sortBy)] = "asc";
+    }
+    const where = {
+        orders: {
+            none: {},
         },
+        verified: process.env.IS_PROD === "TRUE" ? true : undefined,
+    };
+    if (name) {
+        where.name = {
+            contains: name.toString(),
+            // mode: "insensitive",
+        };
+    }
+    if (condition) {
+        where.condition = condition.toString();
+    }
+    if (color) {
+        where.color = color.toString();
+    }
+    const shoes = await prisma_config_1.prisma.shoes.findMany({
+        where,
         include: {
             shoe_images: {
                 select: {
@@ -64,6 +90,8 @@ async function getShoes(req, res) {
             },
         },
         take: LIMIT,
+        skip: offset,
+        orderBy,
     });
     res.status(http2_1.constants.HTTP_STATUS_OK).json(shoes);
 }
@@ -81,7 +109,7 @@ async function addShoe(req, res) {
             user_id: user_session.user_id,
         },
     }));
-    if (!user.is_verified) {
+    if (!user.is_verified && process.env.IS_PROD === "TRUE") {
         (0, httpErrorHandling_1.handleUnauthorizedRequest)(res, ERROR_REASON.UNVERIFIED_ACCOUNT);
         return;
     }
